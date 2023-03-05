@@ -4,8 +4,6 @@
 IVERILOG ?= iverilog
 VERILATOR ?= verilator
 
-## DO NOT MODIFY ANYTHING BELOW THIS LINE
-
 # We will always provide these six targets:
 
 help: targets-intro-help targets-help vars-intro-help vars-help
@@ -35,7 +33,7 @@ sim-vars-help:
 
 # lint runs the Verilator linter on your code.
 lint:
-	$(VERILATOR) --lint-only -top $(TOP_MODULE) $(TOP_MODULE.sv) $(SYNTH_SOURCES) -I../../provided_modules -I  $(VSIM_OPTS) -Wall $(s)
+	$(VERILATOR) --lint-only -top $(TOP_MODULE) $(TOP_MODULE.sv) $(SYNTH_SOURCES) -I../../utils -I  $(VSIM_OPTS) -Wall $(s)
 
 # test runs the simulation logs that you will check into git
 test: verilator.log iverilog.log
