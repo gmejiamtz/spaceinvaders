@@ -8,24 +8,16 @@
 # guide
 
 ## Board Clock: 12 MHz
-set_frequency  clk_12mhz_i             12
-set_io -nowarn clk_12mhz_i             35
+set_frequency  clk_12m      12
+set_io -nowarn clk_12m      35
 
 ## Buttons
-set_io -nowarn reset_n_async_unsafe_i  10
+set_io -nowarn btn_rst      10
+# set_io -nowarn reset_n_async_unsafe_i  10
 
 set_io -nowarn button_async_unsafe_i[1]   20
 set_io -nowarn button_async_unsafe_i[2]   19
 set_io -nowarn button_async_unsafe_i[3]   18
-
-# LEDs and Buttons (PMOD 2)
-set_io -nowarn led_o[1]                26 # L1
-set_io -nowarn led_o[2]                27 # L2
-set_io -nowarn led_o[3]                25 # L3
-set_io -nowarn led_o[4]                23 # L4
-set_io -nowarn led_o[5]                21 # L5
-
-## DVI Board Constraints
 
 ## 12-bit DVI Pmod on Pmod 1A/1B
 set_io -nowarn dvi_clk      38

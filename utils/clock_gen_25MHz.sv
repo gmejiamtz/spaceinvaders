@@ -8,7 +8,7 @@
 // Generates 25.125 MHz (640x480 59.8 Hz) with 12 MHz input clock
 // iCE40 PLLs are documented in Lattice TN1251 and ICE Technology Library
 
-module clock_480p (
+module clock_gen_25Mhz (
     input  wire logic clk_12m,        // input clock (12 MHz)
     input  wire logic rst,            // reset
     output      logic clk_pix,        // pixel clock
