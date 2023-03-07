@@ -115,7 +115,7 @@ module player
 				alive_l = 1'b1;
 				lost_life = 1'b0;
 				//stay in state 1
-				
+				if(move_left_i & ~move_right & ~hit_left_border)
 			end
 
 				
