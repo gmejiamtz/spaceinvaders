@@ -1,5 +1,6 @@
 module counter
-  #(parameter width_p = 4)
+  #(parameter width_p = 4
+   ,parameter [width_p -1:0] reset_val_p = 0)
    (input [0:0] clk_i
    ,input [0:0] reset_i
    ,input [0:0] up_i

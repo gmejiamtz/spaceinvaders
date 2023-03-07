@@ -1,6 +1,5 @@
 module player 
-	#(parameter lives_p = 3
-	,parameter [11:0] color_p = 12'b0110_0000_0101)
+	#(parameter [11:0] color_p = 12'b0110_0000_0101)
 	(input [0:0] clk_i 			//clock
 	,input [0:0] reset_i		//reset button
 	,input [0:0] move_left_i 	//move left
@@ -31,21 +30,27 @@ module player
 	 ***************************************************************************/
 	
 	//state enum for player state machine
-	enum logic [4:0] {
-		not_moving_and_alive   = 	5'b00001,
-		moving_left_and_alive  = 	5'b00010,
-		moving_right_and_alive = 	5'b00100,
-		player_shot_and_alive  =	5'b01000,
-		player_shot_and_dead   = 	5'b10000
+	enum logic [5:0] {
+		not_moving_and_alive   = 	6'b000001,
+		moving_left_and_alive  = 	6'b000010,
+		moving_right_and_alive = 	6'b000100,
+		player_shot_and_alive  =	6'b001000,
+		player_shot_and_dead   = 	6'b010000,
+		player_beat_game	   =	6'b100000	
 	} states;
 
 
 	//state busses
-	logic [4:0] present_l,next_l;
+	logic [5:0] present_l,next_l;
 	//1 bit outputs
 	logic [0:0] alive_l,level_beat_l,game_won_l;
 	//position busses 
 	logic [9:0] left_l,right_l;
+	//lives counter output
+	logic [1:0] lives_counter_l;
+	//level counter
+	logic [8:0] level_counter_l;
+
 
 	//state machine always_ff block
 	//resets to 5'b00001
@@ -57,10 +62,30 @@ module player
 		end
 	end
 
+	//counter for lives
+	//resets on reset input or resuming from either dead states 
+	//increments on beating an even level if the max lives is not reached yet
+	//decrements when the player is hit 
+	counter #(.width_p(2),.reset_val_p(2'b10)) lives_counter_inst 
+		(.clk_i(clk_i),
+		.reset_i(reset_i),
+		.up_i(level_beat_l & (lives_counter_l < 2'b11)),
+		.down_i(hit_i & ~|present_l[4:3]),
+		.counter_o(lives_counter_l));
+
+
+	//counter for levels
+	counter #(.width_p(9),.reset_val_p(9'b0_0000_0001)) level_counter_inst 
+		(.clk_i(clk_i),.reset_i(reset_i | level_counter_l[8]),
+		.up_i(level_beat_l & ~present_l[5]),
+		.down_i(1'b0),.counter_o(level_counter_l));
+
+
 	//combinational logic for next states
 	always_comb begin
 		case (present_l)
 			not_moving_and_alive: begin
+				
 				//stays in state 0
 				if(~(move_right_i ^ move_left_i)) begin
 					next_l = not_moving_and_alive;
