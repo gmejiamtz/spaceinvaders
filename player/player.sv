@@ -2,6 +2,7 @@ module player
 	#(parameter lives_p = 3
 	,parameter [11:0] color_p = 12'b0110_0000_0101)
 	(input [0:0] clk_i 			//clock
+	,input [0:0] reset_i		//reset button
 	,input [0:0] move_left_i 	//move left
 	,input [0:0] shoot_i 		//shoot and start and resume levels 
 	,input [0:0] move_right_i 	//move right
@@ -45,6 +46,39 @@ module player
 	logic [0:0] alive_l,level_beat_l,game_won_l;
 	//position busses 
 	logic [9:0] left_l,right_l;
+
+	//state machine always_ff block
+	//resets to 5'b00001
+	always_ff @(posedge clk_i) begin
+		if (reset_i) begin
+			present_l <= 5'b00001;
+		end else begin
+			present_l <= next_l;
+		end
+	end
+
+	//combinational logic for next states
+	always_comb begin
+		case (present_l)
+			not_moving_and_alive: begin
+				//stays in state 0
+				if(~(move_right_i ^ move_left_i)) begin
+					next_l = not_moving_and_alive;
+				end
+				//moves left
+				if(~move_right_i & move_left_i) begin
+					next_l = moving_left_and_alive; 
+				end
+				//move right
+				if(move_right_i & ~move_left_i) begin
+					next_l = moving_right_and_alive; 
+				end
+				//need logic to get hit by enemy
+			end
+				
+
+		endcase
+	end
 
 
 endmodule
