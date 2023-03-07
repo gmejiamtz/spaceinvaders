@@ -43,7 +43,7 @@ module player
 	//state busses
 	logic [5:0] present_l,next_l;
 	//1 bit outputs
-	logic [0:0] alive_l,level_beat_l,game_won_l;
+	logic [0:0] alive_l,level_beat_l,game_won_l,lose_life;
 	//position busses 
 	logic [9:0] left_l,right_l;
 	//lives counter output
@@ -70,7 +70,7 @@ module player
 		(.clk_i(clk_i),
 		.reset_i(reset_i),
 		.up_i(level_beat_l & (lives_counter_l < 2'b11)),
-		.down_i(hit_i & ~|present_l[4:3]),
+		.down_i(lost_life & (lives_counter_l > 0)),
 		.counter_o(lives_counter_l));
 
 
@@ -85,7 +85,8 @@ module player
 	always_comb begin
 		case (present_l)
 			not_moving_and_alive: begin
-				
+				alive_l = 1'b1;
+				lost_life = 1'b0;
 				//stays in state 0
 				if(~(move_right_i ^ move_left_i)) begin
 					next_l = not_moving_and_alive;
@@ -99,7 +100,24 @@ module player
 					next_l = moving_right_and_alive; 
 				end
 				//need logic to get hit by enemy
+				if(hit_i & (lives_counter_life > 1)) begin
+					lost_life = 1'b1;
+					next_l = player_shot_and_alive;
+				end
+				//player loses game 
+				if(hit_i & (lives_counter_life == 2'b00)) begin
+					alive_l = 1'b0;
+					next_l = player_shot_and_dead;
+				end
 			end
+
+			moving_left_and_alive: begin
+				alive_l = 1'b1;
+				lost_life = 1'b0;
+				//stay in state 1
+				
+			end
+
 				
 
 		endcase
