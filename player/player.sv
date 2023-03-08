@@ -38,8 +38,8 @@ module player
 		player_shot_and_dead   = 	6'b010000,
 		player_beat_game	   =	6'b100000	
 	} states;
-
-
+	
+	
 	//state busses
 	logic [5:0] present_l,next_l;
 	//1 bit outputs
@@ -50,6 +50,10 @@ module player
 	logic [1:0] lives_counter_l;
 	//level counter
 	logic [8:0] level_counter_l;
+	//left border max
+	localparam left_border = 8;
+	localparam right_border = 631;
+	
 
 
 	//state machine always_ff block
@@ -80,9 +84,17 @@ module player
 		.up_i(level_beat_l & ~present_l[5]),
 		.down_i(1'b0),.counter_o(level_counter_l));
 
+	//counter to move 
+	counter #(.width_p(10),.reset_val_p(10'd250)) left_player_counter_inst 
+		(.clk_i(clk_i),.reset(reset_i),
+		.up(moving_left_and_alive & (left_border < left_l)),
+		.down_i(moving_right_and_alive & (right_border < right_l)),
+		.counter_o(left_l));
+
 
 	//combinational logic for next states
 	always_comb begin
+		right_l = left_l + 10'd35;
 		case (present_l)
 			not_moving_and_alive: begin
 				alive_l = 1'b1;
@@ -115,7 +127,9 @@ module player
 				alive_l = 1'b1;
 				lost_life = 1'b0;
 				//stay in state 1
-				if(move_left_i & ~move_right & ~hit_left_border)
+				if(move_left_i & ~move_right & (left_border < left_l)) begin
+					next_l = move_left_and_alive;
+				end
 			end
 
 				
