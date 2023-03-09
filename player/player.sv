@@ -30,20 +30,20 @@ module player
 	 ***************************************************************************/
 	
 	//state enum for player state machine
-	enum logic [5:0] {
-		not_moving_and_alive   = 	6'b000001, //state 0
-		moving_left_and_alive  = 	6'b000010, //state 1
-		moving_right_and_alive = 	6'b000100, //state 2
-		player_shot_and_alive  =	6'b001000, //state 3
-		player_shot_and_dead   = 	6'b010000, //state 4
-		player_beat_game	   =	6'b100000  //state 5
+	enum logic [4:0] {
+		player_state_failed	   =	5'b00000, //state 5
+		not_moving_and_alive   = 	5'b00001, //state 0
+		moving_left_and_alive  = 	5'b00010, //state 1
+		moving_right_and_alive = 	5'b00100, //state 2
+		player_shot_and_alive  =	5'b01000, //state 3
+		player_shot_and_dead   = 	5'b10000  //state 4
 	} states;
 	
 	
 	//state busses
-	logic [5:0] present_l,next_l;
+	logic [4:0] present_l,next_l;
 	//1 bit outputs
-	logic [0:0] alive_l,level_beat_l,game_won_l,lose_life;
+	logic [0:0] alive_l,level_beat_l,game_won_l,lose_life,reset_player_pos;
 	//position busses 
 	logic [9:0] left_l,right_l;
 	//lives counter output
@@ -62,6 +62,9 @@ module player
 		if (reset_i) begin
 			present_l <= 5'b00001;
 		end else begin
+
+			assert (next_l != player_state_failed) else 
+			$display("Asserted next_l != player_state_failed! State has been lost!");
 			present_l <= next_l;
 		end
 	end
@@ -81,12 +84,12 @@ module player
 	//counter for levels
 	counter #(.width_p(9),.reset_val_p(9'b0_0000_0001)) level_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_i | level_counter_l[8]),
-		.up_i(level_beat_l & ~present_l[5]),
+		.up_i(level_beat_l & ~present_l[4]),
 		.down_i(1'b0),.counter_o(level_counter_l));
 
 	//counter to move 
 	counter #(.width_p(10),.reset_val_p(10'd250)) left_player_counter_inst 
-		(.clk_i(clk_i),.reset_i(reset_i),
+		(.clk_i(clk_i),.reset_i(reset_player_pos),
 		.up_i(moving_left_and_alive & (left_border < left_l)),
 		.down_i(moving_right_and_alive & (right_border < right_l)),
 		.counter_o(left_l));
@@ -96,7 +99,8 @@ module player
 	always_comb begin
 		right_l = left_l + 10'd35;
 		case (present_l)
-			not_moving_and_alive: begin
+			not_moving_and_alive: 
+			begin
 				alive_l = 1'b1;
 				lose_life = 1'b0;
 				//stays in state 0
@@ -106,22 +110,26 @@ module player
 					next_l = not_moving_and_alive;
 				end
 				//moves left
-				if(~hit_i & ~move_right_i & move_left_i) begin
+				else if(~hit_i & ~move_right_i & move_left_i) begin
 					next_l = moving_left_and_alive; 
 				end
 				//move right
-				if(~hit_i & move_right_i & ~move_left_i) begin
+				else if(~hit_i & move_right_i & ~move_left_i) begin
 					next_l = moving_right_and_alive; 
 				end
 				//need logic to get hit by enemy
-				if(hit_i & (lives_counter_l > 2'b00)) begin
+				else if(hit_i & (lives_counter_l > 2'b00)) begin
 					lose_life = 1'b1;
 					next_l = player_shot_and_alive;
 				end
 				//player loses game 
-				if(hit_i & (lives_counter_l == 2'b00)) begin
+				else if(hit_i & (lives_counter_l == 2'b00)) begin
 					alive_l = 1'b0;
 					next_l = player_shot_and_dead;
+				end 
+				//error happened and go to lost game state
+				else begin
+					next_l = player_state_failed;
 				end
 			end
 
@@ -181,7 +189,11 @@ module player
 				end
 			end
 		
-		
+		player_shot_and_alive: begin
+			alive_l = 1'b1;
+			lose_life = 1'b0;
+			if(shoot_i
+		end
 
 		endcase
 	end
