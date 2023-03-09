@@ -31,12 +31,12 @@ module player
 	
 	//state enum for player state machine
 	enum logic [5:0] {
-		not_moving_and_alive   = 	6'b000001,
-		moving_left_and_alive  = 	6'b000010,
-		moving_right_and_alive = 	6'b000100,
-		player_shot_and_alive  =	6'b001000,
-		player_shot_and_dead   = 	6'b010000,
-		player_beat_game	   =	6'b100000	
+		not_moving_and_alive   = 	6'b000001, //state 0
+		moving_left_and_alive  = 	6'b000010, //state 1
+		moving_right_and_alive = 	6'b000100, //state 2
+		player_shot_and_alive  =	6'b001000, //state 3
+		player_shot_and_dead   = 	6'b010000, //state 4
+		player_beat_game	   =	6'b100000  //state 5
 	} states;
 	
 	
@@ -74,7 +74,7 @@ module player
 		(.clk_i(clk_i),
 		.reset_i(reset_i),
 		.up_i(level_beat_l & (lives_counter_l < 2'b11)),
-		.down_i(lost_life & (lives_counter_l > 0)),
+		.down_i(lose_life & (lives_counter_l > 0)),
 		.counter_o(lives_counter_l));
 
 
@@ -86,8 +86,8 @@ module player
 
 	//counter to move 
 	counter #(.width_p(10),.reset_val_p(10'd250)) left_player_counter_inst 
-		(.clk_i(clk_i),.reset(reset_i),
-		.up(moving_left_and_alive & (left_border < left_l)),
+		(.clk_i(clk_i),.reset_i(reset_i),
+		.up_i(moving_left_and_alive & (left_border < left_l)),
 		.down_i(moving_right_and_alive & (right_border < right_l)),
 		.counter_o(left_l));
 
@@ -98,26 +98,28 @@ module player
 		case (present_l)
 			not_moving_and_alive: begin
 				alive_l = 1'b1;
-				lost_life = 1'b0;
+				lose_life = 1'b0;
 				//stays in state 0
-				if(~(move_right_i ^ move_left_i)) begin
+				if(~hit_i &  (
+				~(move_right_i ^ move_left_i) | 
+				move_left_i & (left_border >= left_l) | move_right_i & (right_border <= right_l))) begin
 					next_l = not_moving_and_alive;
 				end
 				//moves left
-				if(~move_right_i & move_left_i) begin
+				if(~hit_i & ~move_right_i & move_left_i) begin
 					next_l = moving_left_and_alive; 
 				end
 				//move right
-				if(move_right_i & ~move_left_i) begin
+				if(~hit_i & move_right_i & ~move_left_i) begin
 					next_l = moving_right_and_alive; 
 				end
 				//need logic to get hit by enemy
-				if(hit_i & (lives_counter_life > 1)) begin
-					lost_life = 1'b1;
+				if(hit_i & (lives_counter_l > 2'b00)) begin
+					lose_life = 1'b1;
 					next_l = player_shot_and_alive;
 				end
 				//player loses game 
-				if(hit_i & (lives_counter_life == 2'b00)) begin
+				if(hit_i & (lives_counter_l == 2'b00)) begin
 					alive_l = 1'b0;
 					next_l = player_shot_and_dead;
 				end
@@ -125,14 +127,61 @@ module player
 
 			moving_left_and_alive: begin
 				alive_l = 1'b1;
-				lost_life = 1'b0;
-				//stay in state 1
-				if(move_left_i & ~move_right & (left_border < left_l)) begin
-					next_l = move_left_and_alive;
+				lose_life = 1'b0;
+				//stay in state 1 - move left
+				if(~hit_i & move_left_i & ~move_right_i & (left_border < left_l)) begin
+					next_l = moving_left_and_alive;
+				end
+				//go back to state 0 - dont move 
+				if(~hit_i & (move_left_i & ~move_right_i & (left_border >= left_l) |
+				~(move_left_i ^ move_right_i))) begin
+					next_l = not_moving_and_alive;
+				end
+				//go to state 2 - move right
+				if(~move_left_i & move_right_i & ~hit_i) begin
+					next_l = moving_right_and_alive;
+				end
+				//go to state 3 - player shot but still has lives
+				if(hit_i & (lives_counter_l > 2'b00)) begin
+					lose_life = 1'b1;
+					next_l = player_shot_and_alive;
+				end
+				//go to state 4 - player shot and has no lives
+				if(hit_i & (lives_counter_l == 2'b00)) begin
+					alive_l = 1'b0;
+					next_l = player_shot_and_dead;
 				end
 			end
 
-				
+		moving_right_and_alive: begin
+				alive_l = 1'b1;
+				lose_life = 1'b0;
+				//stay in state 1 - move left
+				if(~hit_i & move_left_i & ~move_right_i) begin
+					next_l = moving_left_and_alive;
+				end
+				//go back to state 0 - dont move 
+				if(~hit_i & (move_left_i & ~move_right_i & (right_border <= right_l) |
+				~(move_left_i ^ move_right_i))) begin
+					next_l = not_moving_and_alive;
+				end
+				//go to state 2 - move right
+				if(~hit_i & (~move_left_i & move_right_i & (right_border > right_l))) begin
+					next_l = moving_right_and_alive;
+				end
+				//go to state 3 - player shot but still has lives
+				if(hit_i & (lives_counter_l > 2'b00)) begin
+					lose_life = 1'b1;
+					next_l = player_shot_and_alive;
+				end
+				//go to state 4 - player shot and has no lives
+				if(hit_i & (lives_counter_l == 2'b00)) begin
+					alive_l = 1'b0;
+					next_l = player_shot_and_dead;
+				end
+			end
+		
+		
 
 		endcase
 	end
