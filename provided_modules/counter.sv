@@ -40,7 +40,7 @@ module counter
 		| new_in_bus & {width_p{toggle_sel}};
 	always_ff @(posedge clk_i) begin
 		if(reset_i) begin //if reseting
-			q_r <= {width_p{1'b0}};
+			q_r <= reset_val_p;
 		end else begin //else shift reg
 			q_r <= dff_in_bus;
 		end

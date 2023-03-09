@@ -1,18 +1,22 @@
 module player 
-	#(parameter [11:0] color_p = 12'b0110_0000_0101)
+	#(parameter [11:0] color_p = 12'b1111_1111_1111)
+	//parameter bus is color in {Red,Green,Blue} format
+	
 	(input [0:0] clk_i 			//clock
 	,input [0:0] reset_i		//reset button
-	,input [0:0] move_left_i 	//move left
-	,input [0:0] shoot_i 		//shoot and start and resume levels 
-	,input [0:0] move_right_i 	//move right
+	,input [0:0] move_left_i 	//move left - left button
+	,input [0:0] shoot_i 		//shoot and start and resume levels - center button
+	,input [0:0] move_right_i 	//move right -right button
 	,input [0:0] hit_i 			//hit by enemy
+	,input [0:0] add_life_i		//add a life due to beating levels
 	,output [0:0] alive_o		//player has more than 0 lives
 	,output [9:0] pos_left_o	//left most position of player
 	,output [9:0] pos_right_o	//right most position of player
-	,output [0:0] level_beat_o	//player finished level no reset needed
-	,output [0:0] game_won_o	//game won and requires manual reset
-	,output [4:0] next_states	//outputs next states for debugging
-	,output [4:0] pres_states	//outputs present states for debugging
+	,output [3:0] player_red_o	//ammount of red the player is for display
+	,output [3:0] player_blue_o	//ammount of blue the player is for display
+	,output [3:0] player_green_o//ammount of green the player is for display
+	,output [4:0] next_states_o	//outputs next states for debugging
+	,output [4:0] pres_states_o	//outputs present states for debugging
 	);
 
 	/****************************************************************************
@@ -37,19 +41,18 @@ module player
 		moving_right_and_alive = 	5'b00100, //state 2
 		player_shot_and_alive  =	5'b01000, //state 3
 		player_shot_and_dead   = 	5'b10000  //state 4
-	} states;
+	}states; 
 	
 	
 	//state busses
 	logic [4:0] present_l,next_l;
 	//1 bit outputs
-	logic [0:0] alive_l,level_beat_l,game_won_l,lose_life,reset_player_pos;
+	logic [0:0] alive_l,lose_life,reset_player_pos,player_left,player_right,
+		new_game_l;
 	//position busses 
 	logic [9:0] left_l,right_l;
 	//lives counter output
 	logic [1:0] lives_counter_l;
-	//level counter
-	logic [8:0] level_counter_l;
 	//left border max
 	localparam left_border = 8;
 	localparam right_border = 631;
@@ -65,6 +68,7 @@ module player
 
 			assert (next_l != player_state_failed) else 
 			$display("Asserted next_l != player_state_failed! State has been lost!");
+
 			present_l <= next_l;
 		end
 	end
@@ -75,34 +79,38 @@ module player
 	//decrements when the player is hit 
 	counter #(.width_p(2),.reset_val_p(2'b10)) lives_counter_inst 
 		(.clk_i(clk_i),
-		.reset_i(reset_i),
-		.up_i(level_beat_l & (lives_counter_l < 2'b11)),
+		.reset_i(new_game_l),
+		.up_i(add_life_i & (lives_counter_l < 2'b11)),
 		.down_i(lose_life & (lives_counter_l > 0)),
 		.counter_o(lives_counter_l));
 
-
+	/*
 	//counter for levels
 	counter #(.width_p(9),.reset_val_p(9'b0_0000_0001)) level_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_i | level_counter_l[8]),
 		.up_i(level_beat_l & ~present_l[4]),
 		.down_i(1'b0),.counter_o(level_counter_l));
-
+	*/
 	//counter to move 
 	counter #(.width_p(10),.reset_val_p(10'd250)) left_player_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_player_pos),
-		.up_i(moving_left_and_alive & (left_border < left_l)),
-		.down_i(moving_right_and_alive & (right_border < right_l)),
+		.up_i(player_left & (left_border < left_l)),
+		.down_i(player_right & (right_border < right_l)),
 		.counter_o(left_l));
 
 
 	//combinational logic for next states
 	always_comb begin
 		right_l = left_l + 10'd35;
+		alive_l = 1'b1;
+		new_game_l = 1'b0;
+		lose_life = 1'b0;
+		player_left = 1'b0;
+		reset_player_pos = 1'b0;
+		player_right = 1'b0;
 		case (present_l)
 			not_moving_and_alive: 
 			begin
-				alive_l = 1'b1;
-				lose_life = 1'b0;
 				//stays in state 0
 				if(~hit_i &  (
 				~(move_right_i ^ move_left_i) | 
@@ -111,10 +119,12 @@ module player
 				end
 				//moves left
 				else if(~hit_i & ~move_right_i & move_left_i) begin
+					player_left = 1'b1;
 					next_l = moving_left_and_alive; 
 				end
 				//move right
 				else if(~hit_i & move_right_i & ~move_left_i) begin
+					player_right = 1'b1;
 					next_l = moving_right_and_alive; 
 				end
 				//need logic to get hit by enemy
@@ -134,70 +144,141 @@ module player
 			end
 
 			moving_left_and_alive: begin
-				alive_l = 1'b1;
-				lose_life = 1'b0;
+				player_left = 1'b1;
 				//stay in state 1 - move left
 				if(~hit_i & move_left_i & ~move_right_i & (left_border < left_l)) begin
 					next_l = moving_left_and_alive;
 				end
 				//go back to state 0 - dont move 
-				if(~hit_i & (move_left_i & ~move_right_i & (left_border >= left_l) |
+				else if(~hit_i & (move_left_i & ~move_right_i & (left_border >= left_l) |
 				~(move_left_i ^ move_right_i))) begin
+					player_left = 1'b0;
 					next_l = not_moving_and_alive;
 				end
 				//go to state 2 - move right
-				if(~move_left_i & move_right_i & ~hit_i) begin
+				else if(~move_left_i & move_right_i & ~hit_i) begin
+					player_left = 1'b0;
+					player_right = 1'b1;
 					next_l = moving_right_and_alive;
 				end
 				//go to state 3 - player shot but still has lives
-				if(hit_i & (lives_counter_l > 2'b00)) begin
+				else if(hit_i & (lives_counter_l > 2'b00)) begin
+					player_left = 1'b0;
 					lose_life = 1'b1;
 					next_l = player_shot_and_alive;
 				end
 				//go to state 4 - player shot and has no lives
-				if(hit_i & (lives_counter_l == 2'b00)) begin
+				else if(hit_i & (lives_counter_l == 2'b00)) begin
+					player_left = 1'b0;
 					alive_l = 1'b0;
 					next_l = player_shot_and_dead;
+				end else begin
+					next_l = player_state_failed;
 				end
 			end
 
 		moving_right_and_alive: begin
-				alive_l = 1'b1;
-				lose_life = 1'b0;
+				player_right = 1'b1;
 				//stay in state 1 - move left
 				if(~hit_i & move_left_i & ~move_right_i) begin
+					player_right = 1'b0;
+					player_left = 1'b1;
 					next_l = moving_left_and_alive;
 				end
 				//go back to state 0 - dont move 
-				if(~hit_i & (move_left_i & ~move_right_i & (right_border <= right_l) |
-				~(move_left_i ^ move_right_i))) begin
+				else if(~hit_i & (move_left_i & ~move_right_i &
+					(right_border <= right_l) |
+					~(move_left_i ^ move_right_i))) begin
+					player_right = 1'b0;
 					next_l = not_moving_and_alive;
 				end
 				//go to state 2 - move right
-				if(~hit_i & (~move_left_i & move_right_i & (right_border > right_l))) begin
+				else if(~hit_i & (~move_left_i & move_right_i & 
+					(right_border > right_l))) begin
 					next_l = moving_right_and_alive;
 				end
 				//go to state 3 - player shot but still has lives
-				if(hit_i & (lives_counter_l > 2'b00)) begin
+					else if(hit_i & (lives_counter_l > 2'b00)) begin
 					lose_life = 1'b1;
+					player_right = 1'b0;
 					next_l = player_shot_and_alive;
 				end
 				//go to state 4 - player shot and has no lives
-				if(hit_i & (lives_counter_l == 2'b00)) begin
+				else if(hit_i & (lives_counter_l == 2'b00)) begin
 					alive_l = 1'b0;
+					player_right = 1'b0;
 					next_l = player_shot_and_dead;
+				end else begin
+					next_l = player_state_failed;
 				end
 			end
 		
 		player_shot_and_alive: begin
-			alive_l = 1'b1;
-			lose_life = 1'b0;
-			if(shoot_i
+			if(shoot_i & ~(move_left_i ^ move_right_i)) begin
+				reset_player_pos = 1'b1;
+				next_l = not_moving_and_alive;
+			end else if (shoot_i & move_left_i & ~move_right_i) begin
+				reset_player_pos = 1'b1;
+				player_left = 1'b1;
+				next_l = moving_left_and_alive;
+			end else if (shoot_i & ~move_left_i & move_right_i) begin
+				reset_player_pos = 1'b1;
+				player_right = 1'b1;
+				next_l = moving_right_and_alive;
+			end else begin //i dont think this state can transition to the error state
+				next_l = player_shot_and_alive;
+			end
 		end
 
+		player_shot_and_dead: begin
+			alive_l = 1'b0;
+			if(shoot_i & ~(move_left_i ^ move_right_i)) begin
+				reset_player_pos = 1'b1;
+				alive_l = 1'b1;
+				new_game_l = 1'b1;
+				next_l = not_moving_and_alive;
+			end else if (shoot_i & move_left_i & ~move_right_i) begin
+				reset_player_pos = 1'b1;
+				player_left = 1'b1;
+				alive_l = 1'b1;
+				new_game_l = 1'b1;
+				next_l = moving_left_and_alive;
+			end else if (shoot_i & ~move_left_i & move_right_i) begin
+				reset_player_pos = 1'b1;
+				player_right = 1'b1;
+				alive_l = 1'b1;
+				new_game_l = 1'b1;
+				next_l = moving_right_and_alive;
+			end else begin //i dont think this state can transition to the error state
+				next_l = player_shot_and_dead;
+			end
+			
+		end
+		//error state if in no state
+		player_state_failed:
+			next_l = player_state_failed;
+		//if in multple states at the same time
+		default:
+			next_l = present_l;
+			
 		endcase
 	end
 
+	//assign output
 
+	//colors
+	assign player_red_o = color_p[11:8];
+	assign player_green_o = color_p[7:4];
+	assign player_blue_o = color_p[3:0];
+	
+	//player data
+	assign alive_o = alive_l;
+	assign pos_left_o = left_l;
+	assign pos_right_o = right_l;
+
+	//debugging state ouputs
+	assign next_states_o = next_l;
+	assign pres_states_o = present_l;
+	
 endmodule
 
