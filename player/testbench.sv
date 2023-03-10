@@ -1,11 +1,7 @@
 // Do not modify this file!
 `timescale 1ns/1ps
-`ifndef LIVES
-`define LIVES 3
-`endif
 module testbench();
-   localparam lives_lp = `LIVES;
-   localparam iterations_lp = 64;
+   localparam iterations_lp = 128;
 
    logic [0:0] reset_done = 1'b0;
    //inputs
@@ -13,9 +9,12 @@ module testbench();
    logic [0:0] right_i;
    logic [0:0] shoot_i;
    logic [0:0] hit_i;
+   logic [0:0] add_life_i;
    //outputs
-	logic[0:0] alive_o,level_beat_o,game_won_o;
-	logic[9:0] left_pos_o,right_pos_o;
+	logic[0:0] alive_o,shot_laser_o,resume_o;
+	logic[9:0] left_pos_o,right_pos_o,gun_pos_o,player_red_o,
+		player_green_o,player_blue_o;
+	logic[4:0] next_l, pres_l; 
 
    //clock
    wire [0:0]  clk_i;
@@ -25,91 +24,91 @@ module testbench();
    logic [width_lp - 1:0] correct_counter_o;
 
    int			  itervar;
-   logic [1:0]		  test_vector [0:iterations_lp-1];
+   logic [5:0]		  test_vector [0:iterations_lp-1];
 
    initial begin
-      test_vector[6'h00] = 2'b00;
-      test_vector[6'h01] = 2'b01;
-      test_vector[6'h02] = 2'b01;
-      test_vector[6'h03] = 2'b10;
+   		//test vector will hold:
+		//{reset_i,add_life_i,hit_i,left_i,shoot_i,right_i}
+      test_vector[7'h00] = 6'b00_0000;
+      test_vector[7'h01] = 6'b00_0000;
+      test_vector[7'h02] = 6'b00_0000;
+      test_vector[7'h03] = 6'b00_0000;
       
-      test_vector[6'h04] = 2'b01;
-      test_vector[6'h05] = 2'b01;
-      test_vector[6'h06] = 2'b01;
-      test_vector[6'h07] = 2'b10;
+      test_vector[7'h04] = 6'b00_0001;
+      test_vector[7'h05] = 6'b00_0001;
+      test_vector[7'h06] = 6'b00_0001;
+      test_vector[7'h07] = 6'b00_0001;
       
-      test_vector[6'h08] = 2'b11;
-      test_vector[6'h09] = 2'b00;
-      test_vector[6'h0a] = 2'b01;
-      test_vector[6'h0b] = 2'b01;
+      test_vector[7'h08] = 6'b00_0110;
+      test_vector[7'h09] = 6'b00_0110;
+      test_vector[7'h0a] = 6'b00_0110;
+      test_vector[7'h0b] = 6'b00_0110;
       
-      test_vector[6'h0c] = 2'b10;
-      test_vector[6'h0d] = 2'b01;
-      test_vector[6'h0e] = 2'b10;
-      test_vector[6'h0f] = 2'b00;
+      test_vector[7'h0c] = 6'b00_0101;
+      test_vector[7'h0d] = 6'b00_0101;
+      test_vector[7'h0e] = 6'b00_0101;
+      test_vector[7'h0f] = 6'b00_0101;
       
-      test_vector[6'h10] = 2'b00;
-      test_vector[6'h11] = 2'b01;
-      test_vector[6'h12] = 2'b01;
-      test_vector[6'h13] = 2'b10;
+      test_vector[7'h10] = 6'b00_0100;
+      test_vector[7'h11] = 6'b00_0100;
+      test_vector[7'h12] = 6'b00_0100;
+      test_vector[7'h13] = 6'b00_0100;
       
-      test_vector[6'h14] = 2'b01;
-      test_vector[6'h15] = 2'b01;
-      test_vector[6'h16] = 2'b01;
-      test_vector[6'h17] = 2'b10;
+      test_vector[7'h14] = 6'b00_0100;
+      test_vector[7'h15] = 6'b00_0100;
+      test_vector[7'h16] = 6'b00_0100;
+      test_vector[7'h17] = 6'b00_0100;
       
-      test_vector[6'h18] = 2'b11;
-      test_vector[6'h19] = 2'b00;
-      test_vector[6'h1a] = 2'b01;
-      test_vector[6'h1b] = 2'b01;
+      test_vector[7'h18] = 6'b11;
+      test_vector[7'h19] = 6'b00;
+      test_vector[7'h1a] = 6'b01;
+      test_vector[7'h1b] = 6'b01;
       
-      test_vector[6'h1c] = 2'b10;
-      test_vector[6'h1d] = 2'b01;
-      test_vector[6'h1e] = 2'b10;
-      test_vector[6'h1f] = 2'b00;
+      test_vector[7'h1c] = 6'b10;
+      test_vector[7'h1d] = 6'b01;
+      test_vector[7'h1e] = 6'b10;
+      test_vector[7'h1f] = 6'b00;
       
-      test_vector[6'h20] = 2'b00;
-      test_vector[6'h21] = 2'b01;
-      test_vector[6'h22] = 2'b01;
-      test_vector[6'h23] = 2'b10;
+      test_vector[7'h20] = 6'b00;
+      test_vector[7'h21] = 6'b01;
+      test_vector[7'h22] = 6'b01;
+      test_vector[7'h23] = 6'b10;
       
-      test_vector[6'h24] = 2'b11;
-      test_vector[6'h25] = 2'b00;
-      test_vector[6'h26] = 2'b01;
-      test_vector[6'h27] = 2'b01;
+      test_vector[7'h24] = 6'b11;
+      test_vector[7'h25] = 6'b00;
+      test_vector[7'h26] = 6'b01;
+      test_vector[7'h27] = 6'b01;
       
-      test_vector[6'h28] = 2'b10;
-      test_vector[6'h29] = 2'b01;
-      test_vector[6'h2a] = 2'b10;
-      test_vector[6'h2b] = 2'b00;
+      test_vector[7'h28] = 6'b10;
+      test_vector[7'h29] = 6'b01;
+      test_vector[7'h2a] = 6'b10;
+      test_vector[7'h2b] = 6'b00;
       
-      test_vector[6'h2c] = 2'b00;
-      test_vector[6'h2d] = 2'b01;
-      test_vector[6'h2e] = 2'b01;
-      test_vector[6'h2f] = 2'b10;
+      test_vector[7'h2c] = 6'b00;
+      test_vector[7'h2d] = 6'b01;
+      test_vector[7'h2e] = 6'b01;
+      test_vector[7'h2f] = 6'b10;
       
-      test_vector[6'h30] = 2'b01;
-      test_vector[6'h31] = 2'b01;
-      test_vector[6'h32] = 2'b01;
-      test_vector[6'h33] = 2'b10;
+      test_vector[7'h30] = 6'b01;
+      test_vector[7'h31] = 6'b01;
+      test_vector[7'h32] = 6'b01;
+      test_vector[7'h33] = 6'b10;
       
-      test_vector[6'h34] = 2'b01;
-      test_vector[6'h35] = 2'b01;
-      test_vector[6'h36] = 2'b01;
-      test_vector[6'h37] = 2'b10;
+      test_vector[7'h34] = 6'b01;
+      test_vector[7'h35] = 6'b01;
+      test_vector[7'h36] = 6'b01;
+      test_vector[7'h37] = 6'b10;
       
-      test_vector[6'h38] = 2'b11;
-      test_vector[6'h39] = 2'b00;
-      test_vector[6'h3a] = 2'b01;
-      test_vector[6'h3b] = 2'b01;
+      test_vector[7'h38] = 6'b11;
+      test_vector[7'h39] = 6'b00;
+      test_vector[7'h3a] = 6'b01;
+      test_vector[7'h3b] = 6'b01;
       
-      test_vector[6'h3c] = 2'b10;
-      test_vector[6'h3d] = 2'b01;
-      test_vector[6'h3e] = 2'b10;
-      test_vector[6'h3f] = 2'b00;
+      test_vector[7'h3c] = 6'b10;
+      test_vector[7'h3d] = 6'b01;
+      test_vector[7'h3e] = 6'b10;
+      test_vector[7'h3f] = 6'b00;
    end
-
-   assign error_counter_o = (counter_o !== correct_counter_o);
 
    nonsynth_clock_gen
      #(.cycle_time_p(10))
@@ -125,13 +124,17 @@ module testbench();
      ,.async_reset_o(reset_i));
 
    player
-     #(.lives_p(lives_lp))
+     #(.color_p(12'b1111_1111_1111))
    dut
      (.clk_i(clk_i)
      ,.reset_i(reset_i)
-     ,.up_i(up_i)
-     ,.down_i(down_i)
-     ,.counter_o(counter_o));
+     ,.move_left_i(left_i)
+     ,.shoot_i(shoot_i)
+	 ,.move_right_i(right_i)
+     ,.hit_i(hit_i)
+	 ,.add_life_i(add_life_i)
+	 ,.alive_o(alive_o)
+	 );
 
    initial begin
 `ifdef VERILATOR
@@ -178,11 +181,21 @@ module testbench();
       // $display("At Negedge %d: data_i = %b, counter_o = %b, reset_i = %b ", itervar, data_i, counter_o, reset_i);
       down_i = test_vector[itervar][0];
       up_i = test_vector[itervar][1];
-      if(reset_done & !reset_i & error_counter_o) begin
-	    $error("\033[0;31mError!\033[0m: counter_o should be %b, got %b", correct_counter_o, counter_o);
+      if(next_l == 0) begin
+      	$display("At Negedge %d: Player state machine data is as follows:");
+		$display("Present States: %b, Next States: %b",pres_l,next_l);
+		$display("Inputs:");
+		$display("Left_i: %b, Right_i: %b, Shoot_i: %b, Hit_i: %b,Add_life_i: %b, Reset_i: %b",
+			left_i,right_i,shoot_i,hit_i,add_life_i,reset_i);
+	    $error("\033[0;31mError!\033[0m:State machine will lose its state!");
 	    $finish();
-      end else if (reset_i & error_counter_o) begin
-	    $error("\033[0;31mError!\033[0m: counter_o should be %b during reset, got %b", correct_counter_o, counter_o);
+      end else if ($countones(next_l) != 1) begin
+      	$display("At Negedge %d: Player state machine data is as follows:");
+		$display("Present States: %b, Next States: %b",pres_l,next_l);
+		$display("Inputs:");
+		$display("Left_i: %b, Right_i: %b, Shoot_i: %b, Hit_i: %b,Add_life_i: %b, Reset_i: %b",
+			left_i,right_i,shoot_i,hit_i,add_life_i,reset_i);
+	    $error("\033[0;31mError!\033[0m: State Machine will be in multiple states!");
 	    $finish();	 
       end
    end
