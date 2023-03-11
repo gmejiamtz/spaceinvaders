@@ -9,3 +9,4 @@ SYNTH_SOURCES += ../utils/nonsynth_reset_gen.sv
 SYNTH_SOURCES += ../utils/clock_gen_25MHz.sv
 SYNTH_SOURCES += ../utils/dvi_controller.sv
 -include ../fpga.mk
+-include ../simulation.mk

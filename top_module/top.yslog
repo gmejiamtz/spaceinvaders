@@ -19,7 +19,7 @@
  |                                                                            |
  \----------------------------------------------------------------------------/
 
- Yosys 0.27+3 (git sha1 b58664d44, clang 14.0.0 -fPIC -Os)
+ Yosys 0.26+50 (git sha1 0f2d226ae, clang 14.0.0 -fPIC -Os)
 
 
 -- Parsing `top.sv' using frontend ` -sv' --
