@@ -97,8 +97,8 @@ module player
 	//counter to move 
 	counter #(.width_p(10),.reset_val_p(10'd250)) left_player_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_player_pos),
-		.up_i(player_left & (left_border < left_l)),
-		.down_i(player_right & (right_border < right_l)),
+		.up_i(player_right & (right_border < right_l)),
+		.down_i(player_left & (left_border < left_l)),
 		.counter_o(left_l));
 
 
