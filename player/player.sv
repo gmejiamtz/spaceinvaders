@@ -69,10 +69,10 @@ module player
 			present_l <= 5'b00001;
 		end else begin
 
+			present_l <= next_l;
 			assert (next_l != player_state_failed) else 
 			$display("Asserted next_l != player_state_failed! State has been lost!");
 
-			present_l <= next_l;
 		end
 	end
 
@@ -110,12 +110,13 @@ module player
 		new_game_l = 1'b0;
 		lose_life = 1'b0;
 		player_left = 1'b0;
-		reset_player_pos = 1'b0;
+		reset_player_pos = 1'b1;
 		player_right = 1'b0;
 		case (present_l)
 			not_moving_and_alive: 
 			begin
 				//stays in state 0
+				reset_player_pos = 1'b0;
 				if(~hit_i &  (
 				~(move_right_i ^ move_left_i) | 
 				move_left_i & (left_border >= left_l) | move_right_i & (right_border <= right_l))) begin
@@ -149,6 +150,7 @@ module player
 
 			moving_left_and_alive: begin
 				player_left = 1'b1;
+				reset_player_pos = 1'b0;
 				//stay in state 1 - move left
 				if(~hit_i & move_left_i & ~move_right_i & (left_border < left_l)) begin
 					next_l = moving_left_and_alive;
@@ -184,6 +186,7 @@ module player
 		moving_right_and_alive: begin
 				player_right = 1'b1;
 				//stay in state 1 - move left
+				reset_player_pos = 1'b0;
 				if(~hit_i & move_left_i & ~move_right_i) begin
 					player_right = 1'b0;
 					player_left = 1'b1;
@@ -218,6 +221,7 @@ module player
 			end
 		
 		player_shot_and_alive: begin
+			reset_player_pos = 1'b0;
 			if(shoot_i & ~(move_left_i ^ move_right_i)) begin
 				reset_player_pos = 1'b1;
 				next_l = not_moving_and_alive;
@@ -236,6 +240,7 @@ module player
 
 		player_shot_and_dead: begin
 			alive_l = 1'b0;
+			reset_player_pos = 1'b0;
 			if(shoot_i & ~(move_left_i ^ move_right_i)) begin
 				reset_player_pos = 1'b1;
 				alive_l = 1'b1;
