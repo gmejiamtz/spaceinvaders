@@ -14,7 +14,8 @@ SYNTH_SOURCES += ../utils/clock_gen_25MHz.sv
 SYNTH_SOURCES += ../utils/dvi_controller.sv
 
 # `make square` makes the .bin file, then run `iceprog square.bin` to program the FPGA
-square: square.bin
+square: 
+	$(ICEPROG) square.bin
 
 %.json: top_%.sv $(SYNTH_SOURCES)
 	$(YOSYS) -ql $(basename $@).yslog -p 'synth_ice40 -top top_$(basename $@) -json $@' top_$(basename $@).sv $(SYNTH_SOURCES)
