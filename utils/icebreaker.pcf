@@ -12,8 +12,8 @@ set_frequency  clk_12m      12
 set_io -nowarn clk_12m      35
 
 ## Buttons
-set_io -nowarn btn_rst      10
-# set_io -nowarn reset_n_async_unsafe_i  10
+# set_io -nowarn btn_rst      10
+set_io -nowarn reset_n_async_unsafe_i  10
 
 set_io -nowarn button_async_unsafe_i[1]   20
 set_io -nowarn button_async_unsafe_i[2]   19
