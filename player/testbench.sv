@@ -28,8 +28,8 @@ module testbench();
 		//{reset_i,add_life_i,hit_i,left_i,shoot_i,right_i}
       test_vector[7'h00] = 6'b10_0000;
       test_vector[7'h01] = 6'b10_0000;
-      test_vector[7'h02] = 6'b00_0000;
-      test_vector[7'h03] = 6'b00_0000;
+      test_vector[7'h02] = 6'b10_0000;
+      test_vector[7'h03] = 6'b10_0000;
       
       test_vector[7'h04] = 6'b00_0001;
       test_vector[7'h05] = 6'b00_0001;

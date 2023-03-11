@@ -1,11 +1,16 @@
 module counter
   #(parameter width_p = 4
-   ,parameter [width_p -1:0] reset_val_p = 0)
+   ,parameter [width_p -1:0] reset_val_p = 0
+   ,parameter [width_p -1:0] step_p = 1)
    (input [0:0] clk_i
    ,input [0:0] reset_i
    ,input [0:0] up_i
    ,input [0:0] down_i
-   ,output [width_p-1:0] counter_o);
+   ,input [0:0] load_i
+   ,input [width_p-1:0] loaded_val_i
+   ,output [width_p-1:0] counter_o
+   ,output [width_p - 1:0] step_o
+   ,output [width_p - 1:0] reset_val_o);
 
    // Implement a parameterized up/down counter. You must use behavioral verilog
    //
@@ -26,12 +31,14 @@ module counter
    // (In other words you don't need to handle over/underflow conditions).
    // 
    // Your code here:
+   	assign reset_val_o = reset_val_p;
+   	assign step_o = step_p;
 	logic [width_p-1:0] q_r; //always ff output
 	wire [width_p-1:0] up_bus,down_bus; //up and down 
 	wire [0:0] toggle_sel,sub_sel; //up^down and down & toggle_sel
 	wire [width_p-1:0] new_in_bus,dff_in_bus; //feed into d flip flops
-	assign up_bus = counter_o + 1'b1;
-	assign down_bus = counter_o - 1'b1;
+	assign up_bus = counter_o + step_p;
+	assign down_bus = counter_o - step_p;
 	assign new_in_bus = down_bus[width_p-1:0] & {width_p{sub_sel}}
 		| up_bus[width_p-1:0] & ~{width_p{sub_sel}};
 	assign toggle_sel = up_i ^ down_i;
@@ -42,7 +49,8 @@ module counter
 		if(reset_i) begin //if reseting
 			q_r <= reset_val_p;
 		end else begin //else shift reg
-			q_r <= dff_in_bus;
+			q_r <= dff_in_bus & {width_p{~load_i}} | 
+			{width_p{load_i}} & loaded_val_i;
 		end
 	end
 	assign counter_o = q_r;

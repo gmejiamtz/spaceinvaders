@@ -53,12 +53,12 @@ module player
 	logic [0:0] alive_l,lose_life,reset_player_pos,player_left,player_right,
 		new_game_l;
 	//position busses 
-	logic [9:0] left_l,right_l,gun_pos_l;
+	logic [9:0] left_l,right_l,gun_pos_l,step_left,left_reset;
 	//lives counter output
-	logic [1:0] lives_counter_l;
+	logic [1:0] lives_counter_l,live_step,live_reset;
 	//left border max
-	localparam left_border = 8;
-	localparam right_border = 631;
+	localparam left_border = 9;
+	localparam right_border = 630;
 	
 
 
@@ -80,12 +80,16 @@ module player
 	//resets on reset input or resuming from either dead states 
 	//increments on beating an even level if the max lives is not reached yet
 	//decrements when the player is hit 
-	counter #(.width_p(2),.reset_val_p(2'b10)) lives_counter_inst 
+	counter #(.width_p(2),.reset_val_p(2'b10),.step_p(2'b01)) 
+		lives_counter_inst 
 		(.clk_i(clk_i),
 		.reset_i(new_game_l),
 		.up_i(add_life_i & (lives_counter_l < 2'b11)),
 		.down_i(lose_life & (lives_counter_l > 0)),
-		.counter_o(lives_counter_l));
+		.load_i(1'b0),.loaded_val_i(2'b00),
+		.counter_o(lives_counter_l),
+		.step_o(live_step),
+		.reset_val_o(live_reset));
 
 	/*
 	//counter for levels
@@ -95,11 +99,15 @@ module player
 		.down_i(1'b0),.counter_o(level_counter_l));
 	*/
 	//counter to move 
-	counter #(.width_p(10),.reset_val_p(10'd250)) left_player_counter_inst 
+	counter #(.width_p(10),.reset_val_p(10'd249),.step_p(10'd10)) 
+		left_player_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_player_pos),
-		.up_i(player_right & (right_border < right_l)),
-		.down_i(player_left & (left_border < left_l)),
-		.counter_o(left_l));
+		.up_i(player_right & (right_border > (right_l))),
+		.down_i(player_left & (left_border < (left_l))),
+		.load_i(1'b0),.loaded_val_i(10'b0),
+		.counter_o(left_l),
+		.step_o(step_left),
+		.reset_val_o(left_reset));
 
 
 	//combinational logic for next states
