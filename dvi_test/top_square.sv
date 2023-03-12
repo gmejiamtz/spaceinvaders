@@ -21,7 +21,11 @@ module top_square (
     logic clk_pix;
     logic clk_pix_locked;
     clock_gen_25MHz clock_pix_inst (
+<<<<<<< HEAD
        .clk_12m(clk_12mhz_i),
+=======
+       .clk_12m,
+>>>>>>> 0d5d72b836201ba04792ea57537c70298ca00eca
        .rst(reset_n_async_unsafe_i),
        .clk_pix,
        .clk_pix_locked
