@@ -8,11 +8,11 @@
 // Generates 25.125 MHz (640x480 59.8 Hz) with 12 MHz input clock
 // iCE40 PLLs are documented in Lattice TN1251 and ICE Technology Library
 
-module clock_gen_25Mhz (
-    input  wire logic clk_12mhz_i,        // input clock (12 MHz)
-    input  wire logic reset_n_async_unsafe_i,            // reset
-    output      logic clk_o,        // pixel clock
-    output      logic clk_locked_o  // pixel clock locked?
+module clock_gen_25MHz (
+    input  wire logic clk_12m,        // input clock (12 MHz)
+    input  wire logic rst,            // reset
+    output      logic clk_pix,        // pixel clock
+    output      logic clk_pix_locked  // pixel clock locked?
     );
 
     localparam FEEDBACK_PATH="SIMPLE";
@@ -29,17 +29,17 @@ module clock_gen_25Mhz (
         .DIVQ(DIVQ),
         .FILTER_RANGE(FILTER_RANGE)
     ) SB_PLL40_PAD_inst (
-        .PACKAGEPIN(clk_12mhz_i),
-        .PLLOUTGLOBAL(clk_o),  // use global clock network
-        .RESETB(reset_n_async_unsafe_i),
+        .PACKAGEPIN(clk_12m),
+        .PLLOUTGLOBAL(clk_pix),  // use global clock network
+        .RESETB(rst),
         .BYPASS(1'b0),
         .LOCK(locked)
     );
 
     // ensure clock lock is synced with pixel clock
     logic locked_sync_0;
-    always_ff @(posedge clk_o) begin
+    always_ff @(posedge clk_pix) begin
         locked_sync_0 <= locked;
-        clk_locked_o <= locked_sync_0;
+        clk_pix_locked <= locked_sync_0;
     end
 endmodule

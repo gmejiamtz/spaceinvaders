@@ -19,7 +19,7 @@
  |                                                                            |
  \----------------------------------------------------------------------------/
 
- Yosys 0.26+50 (git sha1 0f2d226ae, clang 14.0.0 -fPIC -Os)
+ Yosys 0.27+3 (git sha1 b58664d44, clang 14.0.0 -fPIC -Os)
 
 
 -- Parsing `top.sv' using frontend ` -sv' --
@@ -29,8 +29,29 @@ Parsing SystemVerilog input from `top.sv' to AST representation.
 Storing AST representation for module `$abstract\top'.
 Successfully finished Verilog frontend.
 
--- Parsing `top.sv' using frontend ` -sv' --
+-- Parsing `../provided_modules/counter.sv' using frontend ` -sv' --
 
-2. Executing Verilog-2005 frontend: top.sv
-Parsing SystemVerilog input from `top.sv' to AST representation.
-top.sv:1: ERROR: Re-definition of module `$abstract\top'!
+2. Executing Verilog-2005 frontend: ../provided_modules/counter.sv
+Parsing SystemVerilog input from `../provided_modules/counter.sv' to AST representation.
+Storing AST representation for module `$abstract\counter'.
+Successfully finished Verilog frontend.
+
+-- Parsing `../provided_modules/sync_reset.sv' using frontend ` -sv' --
+
+3. Executing Verilog-2005 frontend: ../provided_modules/sync_reset.sv
+Parsing SystemVerilog input from `../provided_modules/sync_reset.sv' to AST representation.
+Storing AST representation for module `$abstract\sync_reset'.
+Successfully finished Verilog frontend.
+
+-- Parsing `../provided_modules/synchronizer.sv' using frontend ` -sv' --
+
+4. Executing Verilog-2005 frontend: ../provided_modules/synchronizer.sv
+Parsing SystemVerilog input from `../provided_modules/synchronizer.sv' to AST representation.
+Storing AST representation for module `$abstract\syncronizer'.
+Successfully finished Verilog frontend.
+
+-- Parsing `../utils/nonsynth_clock_gen.sv' using frontend ` -sv' --
+
+5. Executing Verilog-2005 frontend: ../utils/nonsynth_clock_gen.sv
+Parsing SystemVerilog input from `../utils/nonsynth_clock_gen.sv' to AST representation.
+../utils/nonsynth_clock_gen.sv:8: ERROR: syntax error, unexpected TOK_ELSE, expecting ';'

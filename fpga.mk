@@ -25,12 +25,7 @@ top.rpt: top.asc
 	$(ICETIME) -d up5k -c 12 -mtr $@ $<
 
 fpga-clean:
-	rm -rf *.bin
-	rm -rf *.rpt
-	rm -rf *.asc
-	rm -rf *.json
-	rm -rf *.yslog
-	rm -rf *.nplog
+	rm -rf *.json *.asc *.rpt *.bin *yslog *.nplog
 
 fpga-help:
 	@echo "  prog: Build the FPGA program (bitstream) and run it"
