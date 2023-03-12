@@ -1,4 +1,4 @@
-module syncronizer #()
+module synchronizer #()
     (input [0:0] clk_i
     ,input [0:0] btn_i
     ,output [0:0] btn_o);

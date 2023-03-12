@@ -7,7 +7,7 @@
 
 module top_square (
     input  wire logic clk_12m,      // 12 MHz clock
-    input  wire logic btn_rst,      // reset button
+    input  wire logic reset_n_async_unsafe_i,      // reset button
     output      logic dvi_clk,      // DVI pixel clock
     output      logic dvi_hsync,    // DVI horizontal sync
     output      logic dvi_vsync,    // DVI vertical sync
@@ -22,7 +22,7 @@ module top_square (
     logic clk_pix_locked;
     clock_gen_25Mhz clock_pix_inst (
        .clk_12m,
-       .rst(btn_rst),
+       .rst(reset_n_async_unsafe_i),
        .clk_pix,
        .clk_pix_locked
     );
