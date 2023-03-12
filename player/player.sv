@@ -112,8 +112,8 @@ module player
 
 	//combinational logic for next states
 	always_comb begin
-		right_l = left_l + 10'd35;
-		gun_pos_l = (right_l >> 1) + 1'b1;
+		right_l = left_l + 10'd40;
+		gun_pos_l = (right_l >> 1) - 10'd5;
 		alive_l = 1'b1;
 		new_game_l = 1'b0;
 		lose_life = 1'b0;
