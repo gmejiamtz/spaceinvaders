@@ -20,7 +20,7 @@ module top_square (
     // generate pixel clock
     logic clk_pix;
     logic clk_pix_locked;
-    clock_gen_25Mhz clock_pix_inst (
+    clock_gen_25MHz clock_pix_inst (
        .clk_12m,
        .rst(reset_n_async_unsafe_i),
        .clk_pix,

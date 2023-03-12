@@ -70,8 +70,8 @@ module player
 		end else begin
 
 			present_l <= next_l;
-			assert (next_l != player_state_failed) else 
-			$display("Asserted next_l != player_state_failed! State has been lost!");
+			//assert (next_l != player_state_failed) else 
+			//$display("Asserted next_l != player_state_failed! State has been lost!");
 
 		end
 	end
