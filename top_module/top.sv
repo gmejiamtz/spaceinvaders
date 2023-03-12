@@ -2,13 +2,13 @@ module top
     (input [0:0] clk_12mhz_i
     ,input [0:0] reset_n_async_unsafe_i
     ,input [3:1] button_async_unsafe_i
-    ,output logic [0:0] dvi_clk_o
-    ,output logic [0:0] dvi_hsync_o
-    ,output logic [0:0] dvi_vsync_o
-    ,output logic [7:1] dvi_de_o
-    ,output logic [7:1] dvi_r_o
-    ,output logic [7:1] dvi_g_o
-    ,output logic [7:1] dvi_b_o
+    ,output logic [0:0] dvi_clk
+    ,output logic [0:0] dvi_hsync
+    ,output logic [0:0] dvi_vsync
+    ,output logic [0:0] dvi_de
+    ,output logic [3:0] dvi_r
+    ,output logic [3:0] dvi_g
+    ,output logic [3:0] dvi_b
     );
 
     logic [0:0] reset_i;
@@ -17,11 +17,11 @@ module top
     // clk_i: pixel clock
     // clk_i_locked: pixel clock locked
     logic [0:0] clk_i, clk_i_locked;
-    clock_gen_25Mhz pix_clock_inst (
-        .clk_i(clk_12mhz_i)
-        ,.reset_i(reset_i)
-        ,.clk_o(clk_i)
-        ,.clk_locked_o(clk_i_locked)
+    clock_gen_25MHz pix_clock_inst (
+        .clk_12m(clk_12mhz_i)
+        ,.rst(reset_n_async_unsafe_i)
+        ,.clk_pix(clk_i)
+        ,.clk_pix_locked(clk_i_locked)
     );
 
     /*----- Syncronize Reset and Change N to P -----*/
@@ -32,12 +32,19 @@ module top
     );
 
     /*----- Synchronize Shooting Button -----*/
-    logic [0:0] shoot_btn;
-    sync_button sync_button_inst 
+    logic [0:0] shoot_btn, btn_l, btn_r;
+    synchronizer shoot_button_inst 
         (.clk_i(clk_i)
-        ,.reset_i(1'b0)
-        ,.button_async_unsafe_i(button_async_unsafe_i[2])
-        ,.button_o(shoot_btn));
+        ,.btn_i(button_async_unsafe_i[2])
+        ,.btn_o(shoot_btn));
+    synchronizer shoot_button_inst 
+        (.clk_i(clk_i)
+        ,.btn_i(button_async_unsafe_i[1])
+        ,.btn_o(btn_r));
+    synchronizer shoot_button_inst 
+        (.clk_i(clk_i)
+        ,.btn_i(button_async_unsafe_i[3])
+        ,.btn_o(btn_l));
 
     /*----- Instantiate DVI Sync Signals and Coordinates -----*/
     localparam CORDW = 10;
@@ -55,15 +62,41 @@ module top
     /*----- Initialize a frame -----*/
     logic [0:0] frame;
     always_comb begin
-        frame = (y == 480 && x == 0);
+        frame = (y == 481 && x == 2);
     end
+    
+    /*----- Player -----*/
+    // parameter: color_p = {4'hRed, 4'hGreen, 4'hBlue}
+    logic [0:0] player_alive, shot_laser, resume;
+    logic [9:0] pos_left, pos_right, gun_pos;
+    logic [3:0] player_red, player_green, player_blue;
+    logic [4:0] next_states, pres_states;
+    player #() player_inst 
+        (.clk_i(clk_i) 			        //clock
+	    ,.reset_i(reset_i)	            //reset button
+	    ,.move_left_i(btn_l) 	        //move left - left button
+	    ,.shoot_i(shoot_btn) 		    //shoot and start and resume levels - center button
+	    ,.move_right_i(btn_r) 	        //move right -right button
+	    ,.hit_i(1'b0) 			        //hit by enemy
+	    ,.add_life_i(1'b0)		        //add a life due to beating levels
+	    ,.alive_o(1'b1)		            //player has more than 0 lives
+	    ,.shot_laser_o(1'b0)	        //spawn bullet
+	    ,.resume_o(1'b1)		        //resuming a game
+	    ,.pos_left_o(pos_left)	        //left most position of player
+	    ,.pos_right_o(pos_right)	    //right most position of player
+	    ,.gun_pos_o(gun_pos)		    //location of gun, half of the ship size plus 1
+	    ,.player_red_o(player_red)	    //ammount of red the player is for display
+	    ,.player_green_o(player_green)  //ammount of green the player is for display
+	    ,.player_blue_o(player_blue)	//ammount of blue the player is for display
+	    ,.next_states_o(next_states)	//outputs next states for debugging
+	    ,.pres_states_o(pres_states));  //outputs present states for debugging
 
     /*----- Draw Player -----*/
     logic [0:0] player_area;
     logic [0:0] player_x, player_y;
     always_comb begin
-        player_x = (x >  400 && x < 415);
-        player_y = (y >  400 && y < 415);
+        player_x = (x >  pos_left && x < pos_right);
+        player_y = (y >  399 && y < 414);
         player_area = player_x && player_y;
     end
 
@@ -84,8 +117,8 @@ module top
     end
 
     /*----- DVI Pmod Signals Outputs -----*/
-    SB_IO #(.PIN_TYPE(6'b010100)) dvi_sig_io
-        (.PACKAGE_PIN({dvi_hsync_o, dvi_vsync_o, dvi_de_o, dvi_r_o, dvi_g_o, dvi_b_o})
+    SB_IO #(.PIN_TYPE(6'b010100)) dvi_sig_io [14:0]
+        (.PACKAGE_PIN({dvi_hsync, dvi_vsync, dvi_de, dvi_r, dvi_g, dvi_b})
         ,.OUTPUT_CLK(clk_i)
         ,.D_OUT_0({hsync, vsync, de, display_r, display_g, display_b})
         /* verilator lint_off PINCONNECTEMPTY */
@@ -94,8 +127,8 @@ module top
         );
     
     /*----- DVI Pmod Clock Output -----*/
-    SB_IO #(.PIN_TYPE(6'b0100000)) dvi_clk_io
-        (.PACKAGE_PIN(dvi_clk_o)
+    SB_IO #(.PIN_TYPE(6'b010000)) dvi_clk_io
+        (.PACKAGE_PIN(dvi_clk)
         ,.OUTPUT_CLK(clk_i)
         ,.D_OUT_0(1'b0)
         ,.D_OUT_1(1'b1));
