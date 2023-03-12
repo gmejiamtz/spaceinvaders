@@ -6,7 +6,7 @@
 `timescale 1ns / 1ps
 
 module top_square (
-    input  wire logic clk_12m,      // 12 MHz clock
+    input  wire logic clk_12mhz_i,      // 12 MHz clock
     input  wire logic reset_n_async_unsafe_i,      // reset button
     output      logic dvi_clk,      // DVI pixel clock
     output      logic dvi_hsync,    // DVI horizontal sync
@@ -21,7 +21,11 @@ module top_square (
     logic clk_pix;
     logic clk_pix_locked;
     clock_gen_25MHz clock_pix_inst (
+<<<<<<< HEAD
+       .clk_12m(clk_12mhz_i),
+=======
        .clk_12m,
+>>>>>>> 0d5d72b836201ba04792ea57537c70298ca00eca
        .rst(reset_n_async_unsafe_i),
        .clk_pix,
        .clk_pix_locked

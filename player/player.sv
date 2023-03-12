@@ -1,5 +1,5 @@
 module player 
-	#(parameter [11:0] color_p = 12'b1111_1111_1111)
+	#(parameter [11:0] color_p = {4'h5, 4'hE, 4'h5})
 	//parameter bus is color in {Red,Green,Blue} format
 	
 	(input [0:0] clk_i 			//clock

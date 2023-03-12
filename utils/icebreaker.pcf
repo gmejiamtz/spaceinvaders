@@ -8,8 +8,8 @@
 # guide
 
 ## Board Clock: 12 MHz
-set_frequency  clk_12m      12
-set_io -nowarn clk_12m      35
+set_frequency  clk_12mhz_i      12
+set_io -nowarn clk_12mhz_i      35
 
 ## Buttons
 # set_io -nowarn btn_rst      10
