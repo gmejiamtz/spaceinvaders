@@ -59,7 +59,7 @@ module player
 	logic [1:0] lives_counter_l,live_step,live_reset;
 	//left border max
 	localparam left_border = 9;
-	localparam right_border = 619;
+	localparam right_border = 629;
 	
 
 
@@ -100,7 +100,7 @@ module player
 		.down_i(1'b0),.counter_o(level_counter_l));
 	*/
 	//counter to move 
-	counter #(.width_p(10),.reset_val_p(10'd249),.step_p(10'd10)) 
+	counter #(.width_p(10),.reset_val_p(10'd249),.step_p(10'd5)) 
 		left_player_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_player_pos),
 		.up_i(player_right & (right_border > (right_l)) & frame_i),
