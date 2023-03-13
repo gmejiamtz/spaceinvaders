@@ -1,4 +1,5 @@
 # CSE x25 player Module make file
+SYNTH_SOURCES += ../enemy/enemy.sv
 SYNTH_SOURCES +=  ../player/player.sv
 SYNTH_SOURCES += ../provided_modules/dff.sv
 SYNTH_SOURCES += ../provided_modules/inv.sv

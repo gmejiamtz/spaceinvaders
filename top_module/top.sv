@@ -69,9 +69,9 @@ module top
     /*----- Player -----*/
     // parameter: color_p = {4'hRed, 4'hGreen, 4'hBlue}
     logic [0:0] alive, shot_laser, resume;
-    logic [9:0] pos_left, pos_right, gun_pos;
+    logic [9:0] pos_left, pos_right, gun_left, gun_right;
     logic [3:0] player_red, player_green, player_blue;
-    logic [4:0] next_states, pres_states;
+    logic [4:0] player_next, player_pres;
     player #() player_inst 
         (.clk_i(clk_i) 			        //clock
 	    ,.reset_i(reset_n_async_unsafe_i)	            //reset button
@@ -86,35 +86,75 @@ module top
 	    ,.resume_o(resume)		        //resuming a game
 	    ,.pos_left_o(pos_left)	        //left most position of player
 	    ,.pos_right_o(pos_right)	    //right most position of player
-	    ,.gun_pos_o(gun_pos)		    //location of gun, half of the ship size plus 1
-	    ,.player_red_o(player_red)	    //ammount of red the player is for display
+	    ,.gun_left_o(gun_left)		    //location of gun, half of the ship size plus 1
+	    ,.gun_right_o(gun_right)
+        ,.player_red_o(player_red)	    //ammount of red the player is for display
 	    ,.player_green_o(player_green)  //ammount of green the player is for display
 	    ,.player_blue_o(player_blue)	//ammount of blue the player is for display
-	    ,.next_states_o(next_states)	//outputs next states for debugging
-	    ,.pres_states_o(pres_states));  //outputs present states for debugging
+	    ,.next_states_o(player_next)	//outputs next states for debugging
+	    ,.pres_states_o(player_pres));  //outputs present states for debugging
+
+    /*----- Enemy -----*/
+    // parameters:
+    // - color_p = {4'hRed, 4'hGreen, 4'hBlue}
+    // - top_start_p = 10'bRow
+    // - left_start_p = 10'bColumn
+    // - ship_id_p = 10'dShip ID
+    logic [0:0] enemy_hit, enemy_landed, enemy_dead, start;
+    logic [9:0] enemy_left, enemy_right, enemy_top, enemy_bot;
+    logic [3:0] enemy_red, enemy_green, enemy_blue;
+    logic [9:0] top_ship_pointer, bot_ship_pointer;
+    enemy #() enemy_inst_1
+        (.clk_i(clk_i)
+        ,.reset_i(reset_n_async_unsafe_i)
+        ,.hit_i(shot_laser)
+        ,.frame_i(frame)
+        ,.start_i(shoot_btn)
+        ,.pixel_avail_i(10'd600)
+        ,.top_ship_pointer_i(top_ship_pointer)
+        ,.bot_ship_pointer_i(bot_ship_pointer)
+        ,.left_pos_o(enemy_left)
+        ,.right_pos_o(enemy_right)
+        ,.top_pos_o(enemy_top)
+        ,.bot_pos_o(enemy_bot)
+        ,.landed_o(enemy_landed)
+        ,.dead_o(enemy_dead)
+        ,.enemy_red_o(enemy_red)
+        ,.enemy_green_o(enemy_green)
+        ,.enemy_blue_o(enemy_blue));
 
     /*----- Debug Player States -----*/
-    assign led_o[1] = pres_states[0];
-    assign led_o[2] = pres_states[1];
-    assign led_o[3] = pres_states[2];
-    assign led_o[4] = pres_states[3];
-    assign led_o[5] = pres_states[4];
+    assign led_o[1] = player_next[0];
+    assign led_o[2] = player_next[1];
+    assign led_o[3] = player_next[2];
+    assign led_o[4] = player_next[3];
+    assign led_o[5] = player_next[4];
 
     /*----- Draw Player -----*/
-    logic [0:0] player_area;
-    logic [0:0] player_x, player_y;
+    logic [0:0] player_area_1, player_area_2, player_area;
+    logic [0:0] player_x_1, player_x_2, player_y_1, player_y_2;
     always_comb begin
-        player_x = (x >  pos_left && x < pos_right);
-        player_y = (y >  399 && y < 414);
-        player_area = player_x && player_y;
+        player_x_1 = (x >  pos_left && x < pos_right);
+        player_x_2 = (x >  gun_left && x < gun_right);
+        player_y_2 = (y >  389 && y <= 409);
+        player_y_1 = (y >= 409 && y < 429);
+        player_area_1 = player_x_1 && player_y_1;
+        player_area_2 = player_x_2 && player_y_2;
+        player_area = player_area_1 || player_area_2;
+    end
+
+    /*----- Draw Enemies -----*/
+    logic [0:0] enemy_area;
+    always_comb begin
+        enemy_area = (x > enemy_left && x < enemy_right && y > enemy_top && y < enemy_bot);
     end
 
     /*----- Color Pixels -----*/
     logic [3:0] paint_r, paint_g, paint_b;
     always_comb begin
-        paint_r = (player_area) ? 4'h5 : 4'h0;
-        paint_g = (player_area) ? 4'hE : 4'h0;
-        paint_b = (player_area) ? 4'h5 : 4'h0;
+        paint_r = (enemy_area) ? enemy_red  : ((player_area) ? player_red  : 4'h0);
+        paint_g = (enemy_area) ? enemy_green: ((player_area) ? player_green: 4'h0);
+        paint_b = (enemy_area) ? enemy_blue : ((player_area) ? player_blue : 4'h0);
     end
 
     /*----- Display Pixels -----*/
