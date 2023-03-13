@@ -74,10 +74,11 @@ module top
     logic [4:0] next_states, pres_states;
     player #() player_inst 
         (.clk_i(clk_i) 			        //clock
-	    ,.reset_i(reset_i)	            //reset button
+	    ,.reset_i(reset_n_async_unsafe_i)	            //reset button
 	    ,.move_left_i(btn_l) 	        //move left - left button
 	    ,.shoot_i(shoot_btn) 		    //shoot and start and resume levels - center button
-	    ,.move_right_i(btn_r) 	        //move right -right button
+	    ,.frame_i(frame)
+        ,.move_right_i(btn_r) 	        //move right -right button
 	    ,.hit_i(1'b0) 			        //hit by enemy
 	    ,.add_life_i(1'b0)		        //add a life due to beating levels
 	    ,.alive_o(alive)		            //player has more than 0 lives
@@ -91,6 +92,13 @@ module top
 	    ,.player_blue_o(player_blue)	//ammount of blue the player is for display
 	    ,.next_states_o(next_states)	//outputs next states for debugging
 	    ,.pres_states_o(pres_states));  //outputs present states for debugging
+
+    /*----- Debug Player States -----*/
+    assign led_o[1] = pres_states[0];
+    assign led_o[2] = pres_states[1];
+    assign led_o[3] = pres_states[2];
+    assign led_o[4] = pres_states[3];
+    assign led_o[5] = pres_states[4];
 
     /*----- Draw Player -----*/
     logic [0:0] player_area;
