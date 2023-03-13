@@ -117,7 +117,7 @@ module player
 	always_comb begin
 		right_l = left_l + 10'd40;
 		gun_pos_l = (left_l + 10'd15);
-		gun_pos_r = (left_l + 10'd30);
+		gun_pos_r = (left_l + 10'd25);
 		alive_l = 1'b1;
 		new_game_l = 1'b0;
 		lose_life = 1'b0;
