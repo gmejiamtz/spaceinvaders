@@ -58,7 +58,7 @@ module player
 	logic [1:0] lives_counter_l,live_step,live_reset;
 	//left border max
 	localparam left_border = 9;
-	localparam right_border = 630;
+	localparam right_border = 619;
 	
 
 
