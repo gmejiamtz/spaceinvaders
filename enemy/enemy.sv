@@ -1,5 +1,5 @@
 module enemy 
-	#(parameter [11:0] color_p = 12'b1111_1111_1111,
+	#(parameter [11:0] color_p = {4'h1111,4'h1111,4'h1111},
 	 parameter [9:0] top_start_p = 10'b00_0000_1001,
 	 parameter [9:0] left_start_p =10'b00_0000_1001,
 	 parameter [9:0] ship_id_p = 10'd1) //ship id pointer
@@ -44,7 +44,7 @@ module enemy
 		next_left,next_right;
 
 	always_ff @(posedge clk_i) begin
-		if(reset_i) begin
+		if(reset_i | new_game) begin
 			pres_l <= idle;
 		end else begin
 			pres_l <= next_l;
@@ -130,11 +130,19 @@ module enemy
 				end
 
 			end
-
 			dead: 
 				dead_l = 1'b1;
 				if(start_i) begin
-					
+					dead_l = 1'b0;
+					next_l = right;
+				end else begin
+					next_l = dead;
 				end
+			default:
+				next_l = pres_l;
+
+			
+			assign left_pos_o = 
+
 
 endmodule
