@@ -2,6 +2,7 @@ module top
     (input [0:0] clk_12mhz_i
     ,input [0:0] reset_n_async_unsafe_i
     ,input [3:1] button_async_unsafe_i
+    ,output [5:1] led_o
     ,output logic [0:0] dvi_clk
     ,output logic [0:0] dvi_hsync
     ,output logic [0:0] dvi_vsync
@@ -37,11 +38,11 @@ module top
         (.clk_i(clk_i)
         ,.btn_i(button_async_unsafe_i[2])
         ,.btn_o(shoot_btn));
-    synchronizer shoot_button_inst 
+    synchronizer right_button_inst 
         (.clk_i(clk_i)
         ,.btn_i(button_async_unsafe_i[1])
         ,.btn_o(btn_r));
-    synchronizer shoot_button_inst 
+    synchronizer left_button_inst 
         (.clk_i(clk_i)
         ,.btn_i(button_async_unsafe_i[3])
         ,.btn_o(btn_l));
@@ -67,7 +68,7 @@ module top
     
     /*----- Player -----*/
     // parameter: color_p = {4'hRed, 4'hGreen, 4'hBlue}
-    logic [0:0] player_alive, shot_laser, resume;
+    logic [0:0] alive, shot_laser, resume;
     logic [9:0] pos_left, pos_right, gun_pos;
     logic [3:0] player_red, player_green, player_blue;
     logic [4:0] next_states, pres_states;
@@ -79,9 +80,9 @@ module top
 	    ,.move_right_i(btn_r) 	        //move right -right button
 	    ,.hit_i(1'b0) 			        //hit by enemy
 	    ,.add_life_i(1'b0)		        //add a life due to beating levels
-	    ,.alive_o(1'b1)		            //player has more than 0 lives
-	    ,.shot_laser_o(1'b0)	        //spawn bullet
-	    ,.resume_o(1'b1)		        //resuming a game
+	    ,.alive_o(alive)		            //player has more than 0 lives
+	    ,.shot_laser_o(shot_laser)	        //spawn bullet
+	    ,.resume_o(resume)		        //resuming a game
 	    ,.pos_left_o(pos_left)	        //left most position of player
 	    ,.pos_right_o(pos_right)	    //right most position of player
 	    ,.gun_pos_o(gun_pos)		    //location of gun, half of the ship size plus 1
