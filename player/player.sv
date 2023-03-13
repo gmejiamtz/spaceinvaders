@@ -15,7 +15,8 @@ module player
 	,output [0:0] resume_o		//resuming a game
 	,output [9:0] pos_left_o	//left most position of player
 	,output [9:0] pos_right_o	//right most position of player
-	,output [9:0] gun_pos_o		//location of gun, half of the ship size plus 1
+	,output [9:0] gun_left_o	//location of gun, half of the ship size plus 1
+	,output [9:0] gun_right_o	//location of gun
 	,output [3:0] player_red_o	//ammount of red the player is for display
 	,output [3:0] player_green_o//ammount of green the player is for display
 	,output [3:0] player_blue_o	//ammount of blue the player is for display
@@ -54,7 +55,8 @@ module player
 	logic [0:0] alive_l,lose_life,reset_player_pos,player_left,player_right,
 		new_game_l;
 	//position busses 
-	logic [9:0] left_l,right_l,gun_pos_l,step_left,left_reset;
+	logic [9:0] left_l,right_l,gun_pos_l,gun_pos_r,
+		step_left,left_reset;
 	//lives counter output
 	logic [1:0] lives_counter_l,live_step,live_reset;
 	//left border max
@@ -114,7 +116,8 @@ module player
 	//combinational logic for next states
 	always_comb begin
 		right_l = left_l + 10'd40;
-		gun_pos_l = (right_l >> 1) - 10'd5;
+		gun_pos_l = (left_l + 10'd15);
+		gun_pos_r = (left_l + 10'd30);
 		alive_l = 1'b1;
 		new_game_l = 1'b0;
 		lose_life = 1'b0;
@@ -293,7 +296,8 @@ module player
 	assign alive_o = alive_l;
 	assign pos_left_o = left_l;
 	assign pos_right_o = right_l;
-	assign gun_pos_o = gun_pos_l;
+	assign gun_left_o = gun_pos_l;
+	assign gun_right_o = gun_pos_r;
 
 	//debugging state ouputs
 	assign next_states_o = next_l;
