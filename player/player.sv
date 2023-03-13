@@ -6,6 +6,7 @@ module player
 	,input [0:0] reset_i		//reset button
 	,input [0:0] move_left_i 	//move left - left button
 	,input [0:0] shoot_i 		//shoot and start and resume levels - center button
+	,input [0:0] frame_i		//input for a frame
 	,input [0:0] move_right_i 	//move right -right button
 	,input [0:0] hit_i 			//hit by enemy
 	,input [0:0] add_life_i		//add a life due to beating levels
@@ -84,8 +85,8 @@ module player
 		lives_counter_inst 
 		(.clk_i(clk_i),
 		.reset_i(new_game_l),
-		.up_i(add_life_i & (lives_counter_l < 2'b11)),
-		.down_i(lose_life & (lives_counter_l > 0)),
+		.up_i(add_life_i & (lives_counter_l < 2'b11) & frame_i),
+		.down_i(lose_life & (lives_counter_l > 0) & frame_i),
 		.load_i(1'b0),.loaded_val_i(2'b00),
 		.counter_o(lives_counter_l),
 		.step_o(live_step),
@@ -102,8 +103,8 @@ module player
 	counter #(.width_p(10),.reset_val_p(10'd249),.step_p(10'd10)) 
 		left_player_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_player_pos),
-		.up_i(player_right & (right_border > (right_l))),
-		.down_i(player_left & (left_border < (left_l))),
+		.up_i(player_right & (right_border > (right_l)) & frame_i),
+		.down_i(player_left & (left_border < (left_l)) & frame_i),
 		.load_i(1'b0),.loaded_val_i(10'b0),
 		.counter_o(left_l),
 		.step_o(step_left),
