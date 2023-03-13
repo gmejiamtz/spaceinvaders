@@ -32,30 +32,37 @@ module enemy
 	 *Dead: signals that the ship is dead and also not displayed no respawn
 	 ***************************************************************************/
 	
-	enum logic [3:0]{
-		error = 4'b0000,
-		idle  = 4'b0001,
-		right = 4'b0010,
-		left  = 4'b0100,
-		dead  = 4'b1000
-	}states;
 
-	logic [3:0] next_l, pres_l;
-	logic [0:0] moving_right, moving_left, one_sec, bounce, dead_l;
-	logic [9:0] left_p, right_p, top_p, bot_p,
-				step_o_cnt, move_reset_o, move_count,
-				next_left, next_right;
+	// logic [3:0] next_l, pres_l;
+	// logic [0:0] moving_right, moving_left, one_sec, bounce, dead_l;
+	// logic [9:0] left_p, right_p, top_p, bot_p,
+	// 			step_o_cnt, move_reset_o, move_count,
+	// 			next_left, next_right;
+
+	enum logic [3:0] {
+		ERROR 		 = 4'b0000,
+		IDLE  		 = 4'b0001,
+		MOVING_RIGHT = 4'b0010,
+		MOVING_LEFT  = 4'b0100,
+		DEAD		 = 4'b1000
+	} states;
+
+	logic [3:0] present_l, next_l;
+
+	logic [0:0] dead, landed, moving_right, moving_left, bounce;
+
+	logic [9:0] left_l, right_l, top_l, bot_l;
 
 	always_ff @(posedge clk_i) begin
 		if(reset_i | new_game) begin
-			pres_l <= idle;
+			present_l <= IDLE;
 		end else begin
-			pres_l <= next_l;
+			present_l <= next_l;
 		end
 	end
 	
-	logic [0:0] boundry_hit;
-	assign boundry_hit = (move_count == '0) || (move_count == pixel_avail_i);
+	logic [0:0] right_boundry_hit, left_boundary_hit;
+	assign right_boundry_hit = (right_l == 10'd629);
 
 	//counter for vertical movements
 	counter #(.width_p(10),.reset_val_p(top_start_p),.step_p(10'd10))
@@ -63,25 +70,25 @@ module enemy
 		(.clk_i(clk_i)
 		,.reset_i(reset_i)
 		,.up_i(frame_i & boundry_hit & ~landed_o)
-		,.down_i(1'b0)
-		,.load_i(1'b0)
-		,.loaded_val_i(10'b0)
+		,.down_i('0)
+		,.load_i('0)
+		,.loaded_val_i('0)
 		,.counter_o(top_p)
-		,.step_o(step_o_cnt)
-		,.reset_val_o(move_reset_o));
+		,.step_o()
+		,.reset_val_o());
 
 	//counter for horizontal movements
 	counter #(.width_p(10), .reset_val_p(10'd99), .step_p(10'd10))
 		horizontal_move_counter_inst 
 		(.clk_i(clk_i)
 		,.reset_i(reset_i)
-		,.up_i(frame_i & (moving_left | moving_right))
-		,.down_i(1'b0)
-		,.load_i(bounce)
-		,.loaded_val_i(10'b0)
+		,.up_i(frame_i & (moving_left | moving_right) & ~boundary_hit)
+		,.down_i(frame_i & )
+		,.load_i(boundary_hit)
+		,.loaded_val_i('0)
 		,.counter_o(move_count)
-		,.step_o(step_o_cnt)
-		,.reset_val_o(move_reset_o));
+		,.step_o()
+		,.reset_val_o());
 
 	//registers for left pole
 	always_ff @(posedge clk_i) begin
