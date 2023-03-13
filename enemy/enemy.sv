@@ -61,8 +61,10 @@ module enemy
 		end
 	end
 	
-	logic [0:0] right_boundry_hit, left_boundary_hit;
+	logic [0:0] right_boundry_hit, left_boundary_hit, boundary_hit;
 	assign right_boundry_hit = (right_l == 10'd629);
+	assign left_boundary_hit = (left_l == 10'd0);
+	assign boundary_hit = (right_boundry_hit | left_boundary_hit);
 
 	//counter for vertical movements
 	counter #(.width_p(10),.reset_val_p(top_start_p),.step_p(10'd10))
@@ -83,8 +85,8 @@ module enemy
 		(.clk_i(clk_i)
 		,.reset_i(reset_i)
 		,.up_i(frame_i & (moving_left | moving_right) & ~boundary_hit)
-		,.down_i(frame_i & )
-		,.load_i(boundary_hit)
+		,.down_i('0)
+		,.load_i(right_boundary_hit)
 		,.loaded_val_i('0)
 		,.counter_o(move_count)
 		,.step_o()
@@ -93,9 +95,9 @@ module enemy
 	//registers for left pole
 	always_ff @(posedge clk_i) begin
 		if(reset_i) begin
-			left_p <= left_start_p;
+			left_l <= left_start_p;
 		end else begin 
-			left_p <= next_left;
+			left_l <= next_left;
 		end
 	end
 
@@ -103,63 +105,61 @@ module enemy
 		bounce = 1'b0;
 		moving_right = 1'b0;
 		moving_left = 1'b0;
-		next_left = left_p;
+		next_left = left_l;
 		next_right = next_left + 10'd40;
 		dead_l = 1'b0;
 		case (pres_l)
-			idle : begin
-				if(start_i) begin
-					next_l = right;
+			IDLE: begin
+				if (start_i) begin
+					next_l = MOVING_RIGHT;
 				end else begin
-					next_l = idle;
+					next_l = IDLE;
 				end
 			end
 			
-			right: begin
+			MOVING_RIGHT: begin
 				moving_right = 1'b1;
 				next_left = left_l + move_count;
-				if(((move_count+ 1'b1) == pixel_avail_i) & ~hit_i ) begin
+				if(((move_count + 1'b1) == pixel_avail_i) & ~hit_i ) begin
 					bounce = 1'b1;
-					next_l = left;
-				end else if (((move_count + 1'b1) != pixel_avail_i) & ~hit_i) begin
+					next_l = MOVING_LEFT;
+				end else if (((move_count + 1'b1) != pixel_avail_i) & ~hit_i & left_boundary_hit) begin
 					bounce = 1'b0;
-					next_l = right;
+					next_l = MOVING_RIGHT;
 				end else begin
 					bounce = 1'b0;
-				dead_l = 1'b1;
-					next_l = dead;
+					dead_l = 1'b1;
+					next_l = DEAD;
 				end
-
 			end
 		
-			left: begin
-
-			moving_left = 1'b1;
-			next_left = left_l - move_count;
+			MOVING_LEFT: begin
+				moving_left = 1'b1;
+				next_left = left_l - move_count;
 				if(((move_count+ 1'b1) == pixel_avail_i)&~hit_i ) begin
-					bounce = 1'b1;
-					next_l = right;
-				end else if (((move_count + 1'b1) != pixel_avail_i) & ~hit_i) begin
 					bounce = 1'b0;
-					next_l = left;
+					next_l = MOVING_RIGHT;
+				end else if (((move_count + 1'b1) != pixel_avail_i) & ~hit_i & right_boundry_hit) begin
+					bounce = 1'b0;
+					next_l = MOVING_LEFT;
 				end else begin
 					bounce = 1'b0;
-				dead_l = 1'b1;
-					next_l = dead;
+					dead_l = 1'b1;
+					next_l = DEAD;
 				end
-
 			end
-			dead: begin
+
+			DEAD: begin
 				dead_l = 1'b1;
 				if (start_i) begin
 					dead_l = 1'b0;
-					next_l = right;
+					next_l = MOVING_RIGHT;
 				end else begin
 					next_l = dead;
 				end
 			end
 			default:
-				next_l = pres_l;
+				next_l = IDLE;
 		endcase
 	end
 
