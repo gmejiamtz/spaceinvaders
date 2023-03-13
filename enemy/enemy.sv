@@ -1,5 +1,5 @@
 module enemy 
-	#(parameter [11:0] color_p = {4'h1111,4'h1111,4'h1111},
+	#(parameter [11:0] color_p = {4'hF,4'hF,4'hF},
 	 parameter [9:0] top_start_p = 10'b00_0000_1001,
 	 parameter [9:0] left_start_p =10'b00_0000_1001,
 	 parameter [9:0] ship_id_p = 10'd1) //ship id pointer
@@ -17,7 +17,10 @@ module enemy
 	output [9:0] top_pos_o,				//ship top position
 	output [9:0] bot_pos_o,				//ship bot position
 	output [0:0] landed_o,				//ship has landed thus game over
-	output [0:0] dead_o					//ship is dead
+	output [0:0] dead_o,				//ship is dead
+	output [3:0] enemy_red_o,				//enemy red color 
+	output [3:0] enemy_green_o,			//enemy green color
+	output [3:0] enemy_blue_o				//enemy blue color
 	);
 
 	/****************************************************************************
@@ -37,11 +40,11 @@ module enemy
 		dead  = 4'b1000
 	}states;
 
-	logic[3:0] next_l,pres_l;
-	logic [0:0] moving_right,moving_left,one_sec,bounce,dead_l;
-	logic[9:0] left_p,right_p,top_p,bot_p,
-		step_o_cnt,move_reset_o,move_count,
-		next_left,next_right;
+	logic [3:0] next_l, pres_l;
+	logic [0:0] moving_right, moving_left, one_sec, bounce, dead_l;
+	logic [9:0] left_p, right_p, top_p, bot_p,
+				step_o_cnt, move_reset_o, move_count,
+				next_left, next_right;
 
 	always_ff @(posedge clk_i) begin
 		if(reset_i | new_game) begin
@@ -51,40 +54,49 @@ module enemy
 		end
 	end
 	
+	logic [0:0] boundry_hit;
+	assign boundry_hit = (move_count == '0) || (move_count == pixel_avail_i);
 
 	//counter for vertical movements
 	counter #(.width_p(10),.reset_val_p(top_start_p),.step_p(10'd10))
-		vertical_move_counter_inst (
-		.clk_i(clk_i),.reset_i(reset_i),.up_i(frame_i & boundry_hit& ~landed_o),
-		.down_i(1'b0),.load_i(1'b0),.loaded_val_i(10'b0),
-		.counter_o(top_l),.step_o(step_o_cnt),.reset_val_o(move_reset_o));
+		vertical_move_counter_inst 
+		(.clk_i(clk_i)
+		,.reset_i(reset_i)
+		,.up_i(frame_i & boundry_hit & ~landed_o)
+		,.down_i(1'b0)
+		,.load_i(1'b0)
+		,.loaded_val_i(10'b0)
+		,.counter_o(top_p)
+		,.step_o(step_o_cnt)
+		,.reset_val_o(move_reset_o));
+
 	//counter for horizontal movements
-	counter #(.width_p(10),.reset_val_p(10'99),.step_p(10'd10))
-		horizontal_move_counter_inst (
-		.clk_i(clk_i),.reset_i(reset_i),
-		.up_i(frame_i & (moving_left | moving_right)),
-		.down_i(1'b0),.load_i(bounce),.loaded_val_i(10'b0),
-		.counter_o(move_count),.step_o(step_o_cnt),
-		.reset_val_o(move_reset_o));
+	counter #(.width_p(10), .reset_val_p(10'd99), .step_p(10'd10))
+		horizontal_move_counter_inst 
+		(.clk_i(clk_i)
+		,.reset_i(reset_i)
+		,.up_i(frame_i & (moving_left | moving_right))
+		,.down_i(1'b0)
+		,.load_i(bounce)
+		,.loaded_val_i(10'b0)
+		,.counter_o(move_count)
+		,.step_o(step_o_cnt)
+		,.reset_val_o(move_reset_o));
 
 	//registers for left pole
-
 	always_ff @(posedge clk_i) begin
 		if(reset_i) begin
 			left_p <= left_start_p;
 		end else begin 
 			left_p <= next_left;
 		end
-
 	end
 
-	
-	
 	always_comb begin
 		bounce = 1'b0;
 		moving_right = 1'b0;
 		moving_left = 1'b0;
-		next_left = left_l;
+		next_left = left_p;
 		next_right = next_left + 10'd40;
 		dead_l = 1'b0;
 		case (pres_l)
@@ -99,7 +111,7 @@ module enemy
 			right: begin
 				moving_right = 1'b1;
 				next_left = left_l + move_count;
-				if(((move_count+ 1'b1) == pixel_avail_i)&~hit_i ) begin
+				if(((move_count+ 1'b1) == pixel_avail_i) & ~hit_i ) begin
 					bounce = 1'b1;
 					next_l = left;
 				end else if (((move_count + 1'b1) != pixel_avail_i) & ~hit_i) begin
@@ -130,19 +142,27 @@ module enemy
 				end
 
 			end
-			dead: 
+			dead: begin
 				dead_l = 1'b1;
-				if(start_i) begin
+				if (start_i) begin
 					dead_l = 1'b0;
 					next_l = right;
 				end else begin
 					next_l = dead;
 				end
+			end
 			default:
 				next_l = pres_l;
+		endcase
+	end
 
-			
-			assign left_pos_o = 
+	assign enemy_red_o = color_p[11:8];
+	assign enemy_green_o = color_p[7:4];
+	assign enemy_blue_o = color_p[3:0];
 
+	assign left_pos_o = left_l;
+	assign right_pos_o = right_p;
+	assign top_pos_o = top_p;
+	assign bot_pos_o = top_p - 10'd10;
 
 endmodule
