@@ -2,7 +2,8 @@ module enemy
 	#(parameter [11:0] color_p = {4'hF,4'hF,4'hF},
 	 parameter [9:0] top_start_p = 10'b00_0000_1001,
 	 parameter [9:0] left_start_p =10'b00_0000_1001,
-	 parameter [9:0] ship_id_p = 10'd1) //ship id pointer
+	 parameter [9:0] ship_id_p = 10'd1
+	 parameter [15:0] fire_delay_p = 10'd10) //ship id pointer
 	(
 	input [0:0] clk_i,
 	input [0:0] reset_i,				//when all ships dead and 5 seconds have passed
@@ -47,11 +48,15 @@ module enemy
 		DEAD		 = 4'b1000
 	} states;
 
+	/*----- State Flags -----*/
+	logic [0:0] idle, moving_right, moving_left, dead;
+
 	logic [3:0] present_l, next_l;
 
 	logic [0:0] dead, landed, moving_right, moving_left, bounce;
 
 	logic [9:0] left_l, right_l, top_l, bot_l;
+	logic [9:0] next_left, next_right;
 
 	always_ff @(posedge clk_i) begin
 		if(reset_i | new_game) begin
