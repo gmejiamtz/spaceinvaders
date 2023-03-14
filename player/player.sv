@@ -98,7 +98,7 @@ module player
 
 	//bullet fsm and info needed
 	always_ff @(posedge clk_i) begin
-		if (reset_i | ~bullet_active) begin
+		if (~bullet_active) begin
 			bullet_pres_left <= left_l + 10'd17;
 		end else if(shoot_i & ~bullet_active) begin
 			bullet_pres_left <= left_l + 10'd17;
@@ -151,7 +151,7 @@ module player
 	//counter to move bullet 
 	counter #(.width_p(10),.reset_val_p(10'd384),.step_p(10'd10)) 
 		bullet_counter_inst 
-		(.clk_i(clk_i),.reset_i(reset_i | reset_bullet),
+		(.clk_i(clk_i),.reset_i( reset_bullet),
 		.up_i(1'b0),
 		.down_i(frame_i & bullet_move_up),
 		.load_i(1'b0),.loaded_val_i(10'b0),
@@ -340,16 +340,19 @@ module player
 			bullet_can_shoot: begin
 				if(shoot_i) begin
 					bullet_active = 1'b1;
+					bullet_move_up = 1'b1;
 					bullet_next = bullet_is_flying;
 				end else begin
 					reset_bullet = 1'b1;
 					bullet_move_up = 1'b0;
+					bullet_active = 1'b0;
 					bullet_next = bullet_can_shoot;
 				end
 			end
 
 			bullet_is_flying: begin
 				bullet_move_up = 1'b1;
+				reset_bullet = 1'b0;
 				bullet_active = 1'b1;
 				if(((bullet_pres_top) <= 10'd10) | hit_enemy_i) begin
 					bullet_active = 1'b0;
@@ -389,7 +392,7 @@ module player
 
 	assign bullet_pres_o = bullet_pres;
 	assign bullet_next_o = bullet_next;	
-	assign bullet_not_border = (bullet_pres_top) <= 10'd10;
+	assign bullet_not_border = bullet_move_up;
 	//debugging state ouputs
 	assign next_states_o = next_l;
 	assign pres_states_o = present_l;

@@ -101,6 +101,7 @@ module top
         ,.bullet_bot_o(bullet_bot)
         ,.bullet_pres_o(bullet_pres_states)
         ,.bullet_next_o(bullet_next_states)
+        ,.bullet_not_border(led_o[1])
         );
 
     /*----- Enemy -----*/
@@ -113,7 +114,7 @@ module top
     logic [9:0] enemy_left, enemy_right, enemy_top, enemy_bot;
     logic [3:0] enemy_red, enemy_green, enemy_blue;
     logic [9:0] top_ship_pointer, bot_ship_pointer;
-    enemy #() enemy_inst_1
+    /*enemy #() enemy_inst_1
         (.clk_i(clk_i)
         ,.reset_i(reset_n_async_unsafe_i)
         ,.hit_i(shot_laser)
@@ -131,9 +132,8 @@ module top
         ,.enemy_red_o(enemy_red)
         ,.enemy_green_o(enemy_green)
         ,.enemy_blue_o(enemy_blue));
-
+    
     /*----- Debug Player States -----*/
-    assign led_o[1] = 1'b0;
     assign led_o[3:2] = bullet_next_states;
     assign led_o[5:4] = bullet_pres_states;
     
@@ -156,7 +156,7 @@ module top
 
         //bullet
         bullet_x = (x > bullet_left && x < bullet_right);
-        bullet_y = (y >  bullet_top && y <= bullet_bot);
+        bullet_y = ((y >  bullet_top) && (y < bullet_bot));
         bullet_area = bullet_x && bullet_y;
     end
 
@@ -169,12 +169,9 @@ module top
     /*----- Color Pixels -----*/
     logic [3:0] paint_r, paint_g, paint_b;
     always_comb begin
-        paint_r = (enemy_area) ? enemy_red  : ((player_area) ? player_red  
-        : (bullet_area) ? player_red : 4'h0);
-        paint_g = (enemy_area) ? enemy_green: ((player_area) ? player_green
-        : (bullet_area) ? player_green : 4'h0);
-        paint_b = (enemy_area) ? enemy_blue : ((player_area) ? player_blue 
-        : (bullet_area) ? player_blue : 4'h0);
+        paint_r = {4{bullet_area}} & player_red | {4{player_area}} & player_red;
+        paint_g = {4{bullet_area}} & player_green | {4{player_area}} & player_green;
+        paint_b = {4{bullet_area}} & player_blue | {4{player_area}} & player_blue;
     end
 
     /*----- Display Pixels -----*/
