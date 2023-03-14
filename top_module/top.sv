@@ -148,8 +148,8 @@ module top
     always_comb begin
         player_x_1 = (x >  pos_left && x < pos_right); //player
         player_x_2 = (x >  gun_left && x < gun_right); //player
-        player_y_2 = (y >  389 && y <= 409);           //player
-        player_y_1 = (y >= 409 && y < 429);            //player
+        player_y_2 = (y >  429 && y <= 449);           //player
+        player_y_1 = (y >= 449 && y < 469);            //player
         player_area_1 = player_x_1 && player_y_1;
         player_area_2 = player_x_2 && player_y_2;
         player_area = player_area_1 || player_area_2;
