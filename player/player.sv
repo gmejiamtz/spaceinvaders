@@ -9,10 +9,9 @@ module player
 	,input [0:0] frame_i		//input for a frame
 	,input [0:0] move_right_i 	//move right -right button
 	,input [0:0] hit_i 			//hit by enemy
+	,input [0:0] hit_enemy_i	//player shoot enemy and can shoot again
 	,input [0:0] add_life_i		//add a life due to beating levels
 	,output [0:0] alive_o		//player has more than 0 lives
-	,output [0:0] shot_laser_o	//spawn bullet
-	,output [0:0] resume_o		//resuming a game
 	,output [9:0] pos_left_o	//left most position of player
 	,output [9:0] pos_right_o	//right most position of player
 	,output [9:0] gun_left_o	//location of gun, half of the ship size plus 1
@@ -22,6 +21,14 @@ module player
 	,output [3:0] player_blue_o	//ammount of blue the player is for display
 	,output [4:0] next_states_o	//outputs next states for debugging
 	,output [4:0] pres_states_o	//outputs present states for debugging
+	,output [0:0] bullet_o		//high when bullet flying
+	,output [9:0] bullet_left_o //left side of bullet
+	,output [9:0] bullet_right_o//right side of bullet
+	,output [9:0] bullet_top_o  //top of bullet
+	,output [9:0] bullet_bot_o	//bot of bullet
+	,output [1:0] bullet_pres_o
+	,output [1:0] bullet_next_o
+	,output [0:0] bullet_not_border
 	);
 
 	/****************************************************************************
@@ -39,7 +46,7 @@ module player
 	 ***************************************************************************/
 	
 	//state enum for player state machine
-	enum logic [4:0] {
+	typedef enum logic [4:0] {
 		player_state_failed	   =	5'b00000, //state 5
 		not_moving_and_alive   = 	5'b00001, //state 0
 		moving_left_and_alive  = 	5'b00010, //state 1
@@ -47,21 +54,31 @@ module player
 		player_shot_and_alive  =	5'b01000, //state 3
 		player_shot_and_dead   = 	5'b10000  //state 4
 	}states; 
+	typedef	enum logic [1:0] {
+		bullet_can_shoot = 2'b01,
+		bullet_is_flying = 2'b10
+	}bullet_state;
 	
 	
 	//state busses
 	logic [4:0] present_l,next_l;
 	//1 bit outputs
 	logic [0:0] alive_l,lose_life,reset_player_pos,player_left,player_right,
-		new_game_l;
+		new_game_l,bullet_active;
 	//position busses 
 	logic [9:0] left_l,right_l,gun_pos_l,gun_pos_r,
-		step_left,left_reset;
+		step_left,left_reset,bullet_pres_top,
+		bullet_pres_bot,
+		bullet_pres_left;
 	//lives counter output
-	logic [1:0] lives_counter_l,live_step,live_reset;
+	logic [1:0] lives_counter_l,live_step,live_reset,
+		bullet_next,bullet_pres;
 	//left border max
 	localparam left_border = 9;
 	localparam right_border = 629;
+
+	//bullet info
+	logic [0:0] bullet_hit_something,bullet_move_up,reset_bullet;
 	
 
 
@@ -79,6 +96,24 @@ module player
 		end
 	end
 
+	//bullet fsm and info needed
+	always_ff @(posedge clk_i) begin
+		if (reset_i | ~bullet_active) begin
+			bullet_pres_left <= left_l + 10'd17;
+		end else if(shoot_i & ~bullet_active) begin
+			bullet_pres_left <= left_l + 10'd17;
+		end
+	end
+
+	always_ff @(posedge clk_i) begin
+		if(reset_i) begin
+			bullet_pres <= bullet_can_shoot;
+		end else begin
+			bullet_pres <= bullet_next;
+		end
+
+		
+	end
 	//counter for lives
 	//resets on reset input or resuming from either dead states 
 	//increments on beating an even level if the max lives is not reached yet
@@ -111,6 +146,19 @@ module player
 		.counter_o(left_l),
 		.step_o(step_left),
 		.reset_val_o(left_reset));
+
+
+	//counter to move bullet 
+	counter #(.width_p(10),.reset_val_p(10'd384),.step_p(10'd10)) 
+		bullet_counter_inst 
+		(.clk_i(clk_i),.reset_i(reset_i | reset_bullet),
+		.up_i(1'b0),
+		.down_i(frame_i & bullet_move_up),
+		.load_i(1'b0),.loaded_val_i(10'b0),
+		.counter_o(bullet_pres_top),
+		.step_o(),
+		.reset_val_o());
+
 
 
 	//combinational logic for next states
@@ -195,7 +243,7 @@ module player
 				end
 			end
 
-		moving_right_and_alive: begin
+			moving_right_and_alive: begin
 				player_right = 1'b1;
 				//stay in state 1 - move left
 				reset_player_pos = 1'b0;
@@ -232,7 +280,7 @@ module player
 				end
 			end
 		
-		player_shot_and_alive: begin
+			player_shot_and_alive: begin
 			reset_player_pos = 1'b0;
 			if(shoot_i & ~(move_left_i ^ move_right_i)) begin
 				reset_player_pos = 1'b1;
@@ -248,9 +296,9 @@ module player
 			end else begin //i dont think this state can transition to the error state
 				next_l = player_shot_and_alive;
 			end
-		end
+			end
 
-		player_shot_and_dead: begin
+			player_shot_and_dead: begin
 			alive_l = 1'b0;
 			reset_player_pos = 1'b0;
 			if(shoot_i & ~(move_left_i ^ move_right_i)) begin
@@ -274,14 +322,47 @@ module player
 				next_l = player_shot_and_dead;
 			end
 			
-		end
+			end
 		//error state if in no state
-		player_state_failed:
+			player_state_failed:
 			next_l = player_state_failed;
 		//if in multple states at the same time
-		default:
+			default:
 			next_l = present_l;
 			
+		endcase
+
+		bullet_move_up = 1'b0;
+		bullet_hit_something = 1'b0;
+		reset_bullet = 1'b0;
+		bullet_active = 1'b0;
+		case (bullet_pres)
+			bullet_can_shoot: begin
+				if(shoot_i) begin
+					bullet_active = 1'b1;
+					bullet_next = bullet_is_flying;
+				end else begin
+					reset_bullet = 1'b1;
+					bullet_move_up = 1'b0;
+					bullet_next = bullet_can_shoot;
+				end
+			end
+
+			bullet_is_flying: begin
+				bullet_move_up = 1'b1;
+				bullet_active = 1'b1;
+				if(((bullet_pres_top) <= 10'd10) | hit_enemy_i) begin
+					bullet_active = 1'b0;
+					reset_bullet = 1'b1;
+					bullet_move_up = 1'b0;
+					bullet_next = bullet_can_shoot;
+				end else begin
+					bullet_next = bullet_is_flying;
+				end
+			end
+
+			default:
+				bullet_next = bullet_pres;
 		endcase
 	end
 
@@ -299,9 +380,18 @@ module player
 	assign gun_left_o = gun_pos_l;
 	assign gun_right_o = gun_pos_r;
 
+	//bullet data
+	assign bullet_left_o = bullet_pres_left;
+	assign bullet_right_o = bullet_left_o + 10'd6;
+	assign bullet_top_o = bullet_pres_top;
+	assign bullet_bot_o = bullet_pres_top + 10'd10;
+	assign bullet_o = bullet_active;
+
+	assign bullet_pres_o = bullet_pres;
+	assign bullet_next_o = bullet_next;	
+	assign bullet_not_border = (bullet_pres_top) <= 10'd10;
 	//debugging state ouputs
 	assign next_states_o = next_l;
 	assign pres_states_o = present_l;
 	
 endmodule
-

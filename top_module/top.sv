@@ -69,9 +69,11 @@ module top
     /*----- Player -----*/
     // parameter: color_p = {4'hRed, 4'hGreen, 4'hBlue}
     logic [0:0] alive, shot_laser, resume;
-    logic [9:0] pos_left, pos_right, gun_left, gun_right;
+    logic [9:0] pos_left, pos_right, gun_left, gun_right,
+        bullet_left,bullet_right,bullet_top,bullet_bot;
     logic [3:0] player_red, player_green, player_blue;
     logic [4:0] player_next, player_pres;
+    logic [1:0] bullet_pres_states,bullet_next_states;
     player #() player_inst 
         (.clk_i(clk_i) 			        //clock
 	    ,.reset_i(reset_n_async_unsafe_i)	            //reset button
@@ -80,10 +82,9 @@ module top
 	    ,.frame_i(frame)
         ,.move_right_i(btn_r) 	        //move right -right button
 	    ,.hit_i(1'b0) 			        //hit by enemy
-	    ,.add_life_i(1'b0)		        //add a life due to beating levels
+	    ,.hit_enemy_i(1'b0)             //will be wired ground for now
+        ,.add_life_i(1'b0)		        //add a life due to beating levels
 	    ,.alive_o(alive)		            //player has more than 0 lives
-	    ,.shot_laser_o(shot_laser)	        //spawn bullet
-	    ,.resume_o(resume)		        //resuming a game
 	    ,.pos_left_o(pos_left)	        //left most position of player
 	    ,.pos_right_o(pos_right)	    //right most position of player
 	    ,.gun_left_o(gun_left)		    //location of gun, half of the ship size plus 1
@@ -92,7 +93,15 @@ module top
 	    ,.player_green_o(player_green)  //ammount of green the player is for display
 	    ,.player_blue_o(player_blue)	//ammount of blue the player is for display
 	    ,.next_states_o(player_next)	//outputs next states for debugging
-	    ,.pres_states_o(player_pres));  //outputs present states for debugging
+	    ,.pres_states_o(player_pres)  //outputs present states for debugging
+        ,.bullet_o(shot_laser)
+        ,.bullet_left_o(bullet_left)
+        ,.bullet_right_o(bullet_right)
+        ,.bullet_top_o(bullet_top)
+        ,.bullet_bot_o(bullet_bot)
+        ,.bullet_pres_o(bullet_pres_states)
+        ,.bullet_next_o(bullet_next_states)
+        );
 
     /*----- Enemy -----*/
     // parameters:
@@ -124,23 +133,31 @@ module top
         ,.enemy_blue_o(enemy_blue));
 
     /*----- Debug Player States -----*/
-    assign led_o[1] = player_next[0];
-    assign led_o[2] = player_next[1];
-    assign led_o[3] = player_next[2];
-    assign led_o[4] = player_next[3];
-    assign led_o[5] = player_next[4];
-
+    assign led_o[1] = 1'b0;
+    assign led_o[3:2] = bullet_next_states;
+    assign led_o[5:4] = bullet_pres_states;
+    
     /*----- Draw Player -----*/
     logic [0:0] player_area_1, player_area_2, player_area;
     logic [0:0] player_x_1, player_x_2, player_y_1, player_y_2;
+
+    /*---- Draw Bullet ----*/
+    logic [0:0] bullet_x, bullet_y,bullet_area;
+
+
     always_comb begin
-        player_x_1 = (x >  pos_left && x < pos_right);
-        player_x_2 = (x >  gun_left && x < gun_right);
-        player_y_2 = (y >  389 && y <= 409);
-        player_y_1 = (y >= 409 && y < 429);
+        player_x_1 = (x >  pos_left && x < pos_right); //player
+        player_x_2 = (x >  gun_left && x < gun_right); //player
+        player_y_2 = (y >  389 && y <= 409);           //player
+        player_y_1 = (y >= 409 && y < 429);            //player
         player_area_1 = player_x_1 && player_y_1;
         player_area_2 = player_x_2 && player_y_2;
         player_area = player_area_1 || player_area_2;
+
+        //bullet
+        bullet_x = (x > bullet_left && x < bullet_right);
+        bullet_y = (y >  bullet_top && y <= bullet_bot);
+        bullet_area = bullet_x && bullet_y;
     end
 
     /*----- Draw Enemies -----*/
@@ -152,9 +169,12 @@ module top
     /*----- Color Pixels -----*/
     logic [3:0] paint_r, paint_g, paint_b;
     always_comb begin
-        paint_r = (enemy_area) ? enemy_red  : ((player_area) ? player_red  : 4'h0);
-        paint_g = (enemy_area) ? enemy_green: ((player_area) ? player_green: 4'h0);
-        paint_b = (enemy_area) ? enemy_blue : ((player_area) ? player_blue : 4'h0);
+        paint_r = (enemy_area) ? enemy_red  : ((player_area) ? player_red  
+        : (bullet_area) ? player_red : 4'h0);
+        paint_g = (enemy_area) ? enemy_green: ((player_area) ? player_green
+        : (bullet_area) ? player_green : 4'h0);
+        paint_b = (enemy_area) ? enemy_blue : ((player_area) ? player_blue 
+        : (bullet_area) ? player_blue : 4'h0);
     end
 
     /*----- Display Pixels -----*/

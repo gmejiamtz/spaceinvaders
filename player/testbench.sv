@@ -10,8 +10,10 @@ module testbench();
    logic [0:0] hit_i;
    logic [0:0] add_life_i;
    //outputs
-	logic[0:0] alive_o,shot_laser_o,resume_o,reset_l;
-	logic[9:0] left_pos_o,right_pos_o,gun_pos_o;
+	logic[0:0] alive_o,shot_laser_o,resume_o,reset_l,bullet_o,bullet_border;
+	logic[9:0] left_pos_o,right_pos_o,gun_left_o,bullet_left,bullet_right,
+      bullet_top,bullet_bot,gun_right_o;
+   logic [1:0] bullet_present,bullet_next;
 	logic [3:0] player_red_o,
 		player_green_o,player_blue_o;
 	logic[4:0] next_l, pres_l; 
@@ -127,20 +129,29 @@ module testbench();
      ,.reset_i(reset_l & reset_i)
      ,.move_left_i(left_i)
      ,.shoot_i(shoot_i)
-	 ,.move_right_i(right_i)
+     ,.frame_i(1'b1)
+     ,.hit_enemy_i(1'b0)
+      ,.move_right_i(right_i)
      ,.hit_i(hit_i)
 	 ,.add_life_i(add_life_i)
 	 ,.alive_o(alive_o)
-	 ,.shot_laser_o(shot_laser_o)
-	 ,.resume_o(resume_o)
 	,.pos_left_o(left_pos_o)
 	,.pos_right_o(right_pos_o)
-	,.gun_pos_o(gun_pos_o)
+	,.gun_left_o(gun_left_o)
+   ,.gun_right_o(gun_right_o)
 	,.player_red_o(player_red_o)
 	,.player_green_o(player_green_o)
 	,.player_blue_o(player_blue_o)
 	,.next_states_o(next_l)
 	,.pres_states_o(pres_l)
+   ,.bullet_o(bullet_o)
+   ,.bullet_left_o(bullet_left)
+   ,.bullet_right_o(bullet_right)
+   ,.bullet_top_o(bullet_top)
+   ,.bullet_bot_o(bullet_bot)
+   ,.bullet_pres_o(bullet_present)
+   ,.bullet_next_o(bullet_next)
+   ,.bullet_not_border(bullet_border)
 	);
 
    initial begin
