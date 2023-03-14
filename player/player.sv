@@ -113,9 +113,9 @@ module player
 		end
 	end
 	always_ff @(posedge clk_i) begin
-		if(~shoot_i & (bullet_pres_top == 10'd384) | (bullet_pres_top <= 10'd10)) begin
+		if(~shoot_i & (bullet_pres_top == 10'd424) | (bullet_pres_top <= 10'd10)) begin
 			latch_shoot <= 1'b0;
-		end else if (shoot_i & (bullet_pres_top == 10'd384)) begin
+		end else if (shoot_i & (bullet_pres_top == 10'd424)) begin
 			latch_shoot <= 1'b1;
 		end
 
@@ -156,7 +156,7 @@ module player
 		.reset_val_o(left_reset));
 
 	//counter to move bullet 
-	counter #(.width_p(10),.reset_val_p(10'd384),.step_p(10'd10)) 
+	counter #(.width_p(10),.reset_val_p(10'd424),.step_p(10'd10)) 
 		bullet_counter_inst 
 		(.clk_i(clk_i),.reset_i(reset_bullet),
 		.up_i(1'b0),
