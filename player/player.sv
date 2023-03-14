@@ -64,7 +64,7 @@ module player
 	logic [4:0] present_l,next_l;
 	//1 bit outputs
 	logic [0:0] alive_l,lose_life,reset_player_pos,player_left,player_right,
-		new_game_l,bullet_active;
+		new_game_l,bullet_active,latch_shoot;
 	//position busses 
 	logic [9:0] left_l,right_l,gun_pos_l,gun_pos_r,
 		step_left,left_reset,bullet_pres_top,
@@ -111,9 +111,17 @@ module player
 		end else begin
 			bullet_pres <= bullet_next;
 		end
+	end
+	always_ff @(posedge clk_i) begin
+		if(~shoot_i & (bullet_pres_top == 10'd384) | (bullet_pres_top <= 10'd10)) begin
+			latch_shoot <= 1'b0;
+		end else if (shoot_i & (bullet_pres_top == 10'd384)) begin
+			latch_shoot <= 1'b1;
+		end
+
+	end
 
 		
-	end
 	//counter for lives
 	//resets on reset input or resuming from either dead states 
 	//increments on beating an even level if the max lives is not reached yet
@@ -147,13 +155,12 @@ module player
 		.step_o(step_left),
 		.reset_val_o(left_reset));
 
-
 	//counter to move bullet 
 	counter #(.width_p(10),.reset_val_p(10'd384),.step_p(10'd10)) 
 		bullet_counter_inst 
-		(.clk_i(clk_i),.reset_i( reset_bullet),
+		(.clk_i(clk_i),.reset_i(reset_bullet),
 		.up_i(1'b0),
-		.down_i(frame_i & bullet_move_up),
+		.down_i(frame_i & bullet_move_up & (bullet_pres_top > 10'd10)),
 		.load_i(1'b0),.loaded_val_i(10'b0),
 		.counter_o(bullet_pres_top),
 		.step_o(),
@@ -338,7 +345,7 @@ module player
 		bullet_active = 1'b0;
 		case (bullet_pres)
 			bullet_can_shoot: begin
-				if(shoot_i) begin
+				if(latch_shoot) begin
 					bullet_active = 1'b1;
 					bullet_move_up = 1'b1;
 					bullet_next = bullet_is_flying;
@@ -354,18 +361,22 @@ module player
 				bullet_move_up = 1'b1;
 				reset_bullet = 1'b0;
 				bullet_active = 1'b1;
-				if(((bullet_pres_top) <= 10'd10) | hit_enemy_i) begin
+				if(bullet_move_up & (~hit_enemy_i & (bullet_pres_top > 10'd10))) begin
+					bullet_move_up = 1'b1;
+					reset_bullet = 1'b0;
+					bullet_active = 1'b1;
+					bullet_next = bullet_is_flying;
+				end else begin
 					bullet_active = 1'b0;
 					reset_bullet = 1'b1;
 					bullet_move_up = 1'b0;
 					bullet_next = bullet_can_shoot;
-				end else begin
-					bullet_next = bullet_is_flying;
 				end
 			end
 
 			default:
 				bullet_next = bullet_pres;
+			
 		endcase
 	end
 
