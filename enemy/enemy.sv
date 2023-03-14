@@ -3,8 +3,7 @@ module enemy
 	 parameter [9:0] top_start_p = 10'b00_0000_1001,
 	 parameter [9:0] left_start_p =10'b00_0000_1001,
 	 parameter [9:0] ship_id_p = 10'd1,
-	 parameter [15:0] fire_delay_p = 15'd10) //ship id pointer
-	 parameter [9:0] bullet_delay_p = 10'd5) //ship id pointer
+	 parameter [15:0] bullet_delay_p = 10'd5) //ship id pointer
 	(
 	input [0:0] clk_i,
 	input [0:0] reset_i,				//when all ships dead and 5 seconds have passed
@@ -54,7 +53,8 @@ module enemy
 
 	logic [9:0] left_l, right_l, top_l, bot_l;
 	logic [9:0] next_left, next_right;
-	logic [9:0] vertical_count, horizontal_count, bullet_count;
+	logic [9:0] vertical_count, horizontal_count;
+	logic [15:0] bullet_count;
 
 	always_ff @(posedge clk_i) begin
 		if(reset_i | new_game) begin
@@ -110,7 +110,7 @@ module enemy
 		,.step_o()
 		,.reset_val_o());
 
-	counter #(.width_p(10), .reset_val_p(bot_pos_o), .step_p(10'd10))
+	counter #(.width_p(16), .reset_val_p(bot_pos_o), .step_p(10'd10))
 		enemy_bullet_counter_inst
 		(.clk_i(clk_i)
 		,.reset_i(reset_bullet)
