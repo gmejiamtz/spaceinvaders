@@ -11,8 +11,9 @@ module enemy
 	input [0:0] frame_i,				//a frame has been processed for timing
 	input [0:0] start_i,				//btnC input responding to turn on enemies
 	input [9:0]	pixel_avail_i,			//ammount of pixels available for movement
-	input [9:0]	top_ship_pointer_i,		//pointer to the ship above
-	input [9:0] bot_ship_pointer_i,		//pointer to the ship below
+	input [0:0] pointed_to_i,			//this is the last one in the column
+	// input [9:0]	top_ship_pointer_i,		//pointer to the ship above
+	// input [9:0] bot_ship_pointer_i,		//pointer to the ship below
 	output [9:0] left_pos_o,			//ship left position
 	output [9:0] right_pos_o,			//ship right position
 	output [9:0] top_pos_o,				//ship top position
