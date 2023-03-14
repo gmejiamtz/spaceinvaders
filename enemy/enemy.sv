@@ -2,7 +2,7 @@ module enemy
 	#(parameter [11:0] color_p = {4'hF,4'hF,4'hF},
 	 parameter [9:0] top_start_p = 10'b00_0000_1001,
 	 parameter [9:0] left_start_p =10'b00_0000_1001,
-	 parameter [9:0] ship_id_p = 10'd1
+	 parameter [9:0] ship_id_p = 10'd1,
 	 parameter [9:0] bullet_delay_p = 10'd5) //ship id pointer
 	(
 	input [0:0] clk_i,
