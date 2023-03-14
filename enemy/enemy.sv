@@ -125,7 +125,7 @@ module enemy
 			MOVING_RIGHT: begin
 				moving_right = 1'b1;
 				next_left = left_l + move_count;
-				if(((move_count + 1'b1) == pixel_avail_i) & ~hit_i ) begin
+				if(((move_count + 1'b1) == pixel_avail_i) & ~hit_i) begin
 					bounce = 1'b1;
 					next_l = MOVING_LEFT;
 				end else if (((move_count + 1'b1) != pixel_avail_i) & ~hit_i & left_boundary_hit) begin
