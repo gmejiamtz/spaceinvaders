@@ -126,7 +126,7 @@ module player
 	//resets on reset input or resuming from either dead states 
 	//increments on beating an even level if the max lives is not reached yet
 	//decrements when the player is hit 
-	counter #(.width_p(2),.reset_val_p(2'b10),.step_p(2'b01)) 
+	counter #(.width_p(2),.reset_val_p(2'b00),.step_p(2'b01)) 
 		lives_counter_inst 
 		(.clk_i(clk_i),
 		.reset_i(new_game_l),
