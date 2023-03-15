@@ -1,29 +1,27 @@
 module enemy 
 	#(parameter [11:0] color_p = {4'hF,4'hF,4'hF},
-	 parameter [9:0] top_start_p = 10'b00_0000_1001,
-	 parameter [9:0] left_start_p =10'b00_0000_1001,
-	 parameter [9:0] ship_id_p = 10'd1,
-	 parameter [15:0] bullet_delay_p = 10'd5) //ship id pointer
+	  parameter [9:0] top_start_p = 10'b00_0000_1001,
+	  parameter [9:0] left_start_p =10'b00_0000_1001,
+	  parameter [9:0] ship_id_p = 10'd1,
+	  parameter [15:0] bullet_delay_p = 10'd5) //ship id pointer
 	(
-	input [0:0] clk_i,
-	input [0:0] reset_i,				//when all ships dead and 5 seconds have passed
-	input [0:0] hit_i,					//hit by the player
-	input [0:0] frame_i,				//a frame has been processed for timing
-	input [0:0] start_i,				//btnC input responding to turn on enemies
-	input [9:0]	pixel_avail_i,			//ammount of pixels available for movement
-	input [0:0] pointed_to_i,			//this is the last one in the column
-	input [0:0] is_front_o, 			//is the front of the column
-	// input [9:0]	top_ship_pointer_i,		//pointer to the ship above
-	// input [9:0] bot_ship_pointer_i,		//pointer to the ship below
+	input  [0:0] clk_i,
+	input  [0:0] reset_i,				//when all ships dead and 5 seconds have passed
+	input  [0:0] hit_i,					//hit by the player
+	input  [0:0] frame_i,				//a frame has been processed for timing
+	input  [0:0] all_dead_i,			//ensures that all are dead
+	input  [9:0] pixel_avail_i,		    //ammount of pixels available for movement
+	input  [0:0] pointed_to_i,			//this is the last one in the column
+	input  [0:0] is_front_o, 			//is the front of the column
 	output [9:0] left_pos_o,			//ship left position
 	output [9:0] right_pos_o,			//ship right position
 	output [9:0] top_pos_o,				//ship top position
 	output [9:0] bot_pos_o,				//ship bot position
 	output [0:0] landed_o,				//ship has landed thus game over
 	output [0:0] dead_o,				//ship is dead
-	output [3:0] enemy_red_o,				//enemy red color 
+	output [3:0] enemy_red_o,			//enemy red color 
 	output [3:0] enemy_green_o,			//enemy green color
-	output [3:0] enemy_blue_o				//enemy blue color
+	output [3:0] enemy_blue_o			//enemy blue color
 	);
 
 
@@ -81,7 +79,7 @@ module enemy
 	
 	wire [0:0] right_boundry_hit, left_boundary_hit, boundary_hit;
 	assign right_boundry_hit = (right_l == 10'd629);
-	assign left_boundary_hit = (left_l == 10'd0);
+	assign left_boundary_hit = (left_l == 10'd9);
 	assign boundary_hit = (right_boundry_hit | left_boundary_hit);
 
 	//counter for vertical movements
@@ -102,7 +100,7 @@ module enemy
 		horizontal_move_counter_inst 
 		(.clk_i(clk_i)
 		,.reset_i(reset_i)
-		,.up_i(frame_i & (moving_left | moving_right) & ~boundary_hit)
+		,.up_i(frame_i & (moving_left | moving_right) & ~boundary_hit & ~all_dead_i)
 		,.down_i('0)
 		,.load_i(right_boundary_hit)
 		,.loaded_val_i('0)
@@ -110,7 +108,7 @@ module enemy
 		,.step_o()
 		,.reset_val_o());
 
-	counter #(.width_p(16), .reset_val_p(bot_pos_o), .step_p(10'd10))
+	counter #(.width_p(10), .reset_val_p(bot_pos_o), .step_p(10'd10))
 		enemy_bullet_counter_inst
 		(.clk_i(clk_i)
 		,.reset_i(reset_bullet)
@@ -139,14 +137,6 @@ module enemy
 		next_right = next_left + 10'd40;
 		dead_l = 1'b0;
 		case (pres_l)
-			IDLE: begin
-				if (start_i) begin
-					next_l = MOVING_RIGHT;
-				end else begin
-					next_l = IDLE;
-				end
-			end
-			
 			MOVING_RIGHT: begin
 				moving_right = 1'b1;
 				next_left = left_l + horizontal_count;
@@ -181,15 +171,10 @@ module enemy
 
 			DEAD: begin
 				dead_l = 1'b1;
-				if (start_i) begin
-					dead_l = 1'b0;
-					next_l = MOVING_RIGHT;
-				end else begin
-					next_l = dead;
-				end
+				next_l = DEAD;
 			end
 			default:
-				next_l = IDLE;
+				next_l = DEAD;
 		endcase
 	end
 
