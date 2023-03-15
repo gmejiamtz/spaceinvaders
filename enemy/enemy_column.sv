@@ -38,11 +38,20 @@ module enemy_column
 
     int ship_pointer = 5;
     always_comb begin
-        if ((column_status[ship_pointer - 1]) && (column_status[ship_pointer - 2])) begin
-            ship_pointer--;
-        end else if (column_status[ship_pointer]) begin
-            
-        end
+        case (column_status)
+            5'b00000, 5'b00001, 5'b00010, 5'b00011,
+            5'b00100, 5'b00101, 5'b00110, 5'b00111,
+            5'b01000, 5'b01001, 5'b01010, 5'b01011,
+            5'b01100, 5'b01101, 5'b01110, 5'b01111: ship_pointer = 5;
+
+            5'b10000, 5'b10001, 5'b10010, 5'b10011,
+            5'b10100, 5'b10101, 5'b10110, 5'b10111: ship_pointer = 4;
+
+            5'b11000, 5'b11001, 5'b11010, 5'b11011: ship_pointer = 3;
+            5'b11100, 5'b11101: ship_pointer = 2;
+            5'b11110: ship_pointer = 1;
+            default: ship_pointer = 0;
+        endcase
     end
 
     for (genvar i = 0; i < 5; i++) begin

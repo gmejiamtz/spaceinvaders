@@ -43,19 +43,16 @@ module enemy
 	} states;
 
 	/*----- State Flags -----*/
-	logic [0:0] idle, moving_right, moving_left, dead;
-
 	logic [3:0] present_l, next_l;
 
-	logic [0:0] dead, landed, moving_right, moving_left, bounce;
+	logic [0:0] dead_l, landed, moving_right, moving_left, bounce;
 
 	logic [9:0] left_l, right_l, top_l, bot_l;
 	logic [9:0] next_left, next_right;
 	logic [9:0] vertical_count, horizontal_count;
-	logic [15:0] bullet_count;
 
 	always_ff @(posedge clk_i) begin
-		if(reset_i | new_game) begin
+		if(reset_i) begin
 			present_l <= IDLE;
 		end else begin
 			present_l <= next_l;
@@ -74,26 +71,32 @@ module enemy
 		,.load_i((sec_count == (bullet_delay_p * 60) + 1) | hit_i)
 		,.loaded_val_i('0)
 		,.counter_o(sec_count)
+		/* verilator lint_off PINCONNECTEMPTY */
 		,.step_o()
-		,.reset_val_o());
+		,.reset_val_o()
+		/* verilator lint_on PINCONNECTEMPTY */
+		);
 	
-	wire [0:0] right_boundry_hit, left_boundary_hit, boundary_hit;
-	assign right_boundry_hit = (right_l == 10'd629);
+	wire [0:0] right_boundary_hit, left_boundary_hit, boundary_hit;
+	assign right_boundary_hit = (right_l == 10'd629);
 	assign left_boundary_hit = (left_l == 10'd9);
-	assign boundary_hit = (right_boundry_hit | left_boundary_hit);
+	assign boundary_hit = (right_boundary_hit | left_boundary_hit);
 
 	//counter for vertical movements
 	counter #(.width_p(10),.reset_val_p(top_start_p),.step_p(10'd10))
 		vertical_move_counter_inst 
 		(.clk_i(clk_i)
 		,.reset_i(reset_i)
-		,.up_i(frame_i & boundry_hit & ~landed_o)
+		,.up_i(frame_i & boundary_hit & ~landed_o)
 		,.down_i('0)
 		,.load_i('0)
 		,.loaded_val_i('0)
 		,.counter_o(vertical_count)
+		/* verilator lint_off PINCONNECTEMPTY */
 		,.step_o()
-		,.reset_val_o());
+		,.reset_val_o()
+		/* verilator lint_on PINCONNECTEMPTY */
+		);
 
 	//counter for horizontal movements
 	counter #(.width_p(10), .reset_val_p(10'd99), .step_p(10'd10))
@@ -105,20 +108,27 @@ module enemy
 		,.load_i(right_boundary_hit)
 		,.loaded_val_i('0)
 		,.counter_o(horizontal_count)
+		/* verilator lint_off PINCONNECTEMPTY */
 		,.step_o()
-		,.reset_val_o());
+		,.reset_val_o()
+		/* verilator lint_on PINCONNECTEMPTY */
+		);
 
-	counter #(.width_p(10), .reset_val_p(bot_pos_o), .step_p(10'd10))
+	logic [15:0] bullet_count;
+	counter #(.width_p(10), .reset_val_p(top_pos_o + 20), .step_p(10'd10))
 		enemy_bullet_counter_inst
 		(.clk_i(clk_i)
 		,.reset_i(reset_bullet)
-		,.up_i(frame_i & bullet_move_up & ~hit_i)
+		,.up_i(frame_i & bullet_move_up & (bullet_pres_bot < 10'd469) & pointed_to_i)
 		,.down_i('0)
 		,.load_i('0)
 		,.loaded_val_i('0)
 		,.counter_o(bullet_count)
+		/* verilator lint_off PINCONNECTEMPTY */
 		,.step_o()
-		,.reset_val_o());
+		,.reset_val_o()
+		/* verilator lint_on PINCONNECTEMPTY */
+		);
 
 	//registers for left pole
 	always_ff @(posedge clk_i) begin
@@ -136,7 +146,7 @@ module enemy
 		next_left = left_l;
 		next_right = next_left + 10'd40;
 		dead_l = 1'b0;
-		case (pres_l)
+		case (present_l)
 			MOVING_RIGHT: begin
 				moving_right = 1'b1;
 				next_left = left_l + horizontal_count;
@@ -159,7 +169,7 @@ module enemy
 				if(((horizontal_count+ 1'b1) == pixel_avail_i)&~hit_i ) begin
 					bounce = 1'b0;
 					next_l = MOVING_RIGHT;
-				end else if (((horizontal_count + 1'b1) != pixel_avail_i) & ~hit_i & right_boundry_hit) begin
+				end else if (((horizontal_count + 1'b1) != pixel_avail_i) & ~hit_i & right_boundary_hit) begin
 					bounce = 1'b0;
 					next_l = MOVING_LEFT;
 				end else begin
@@ -182,9 +192,10 @@ module enemy
 	assign enemy_green_o = color_p[7:4];
 	assign enemy_blue_o = color_p[3:0];
 
+	assign dead_o = dead_l;
 	assign left_pos_o = left_l;
-	assign right_pos_o = right_p;
+	assign right_pos_o = right_l;
 	assign top_pos_o = vertical_count;
-	assign bot_pos_o = vertical_count - 10'd10;
+	assign bot_pos_o = vertical_count + 10'd40;
 
 endmodule
