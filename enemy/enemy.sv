@@ -3,7 +3,7 @@ module enemy
 	  parameter [9:0] top_start_p = 10'b00_0000_1001,
 	  parameter [9:0] left_start_p =10'b00_0000_1001,
 	  parameter [9:0] ship_id_p = 10'd1,
-	  parameter [15:0] bullet_delay_p = 10'd5) //ship id pointer
+	  parameter [15:0] bullet_delay_p = 16'd5) //ship id pointer
 	(
 	input  [0:0] clk_i,
 	input  [0:0] reset_i,				//when all ships dead and 5 seconds have passed
@@ -13,6 +13,11 @@ module enemy
 	input  [9:0] pixel_avail_i,		    //ammount of pixels available for movement
 	input  [0:0] pointed_to_i,			//this is the last one in the column
 	input  [0:0] is_front_o, 			//is the front of the column
+	input  [0:0] hit_player_i,			//hit the player
+	input  [9:0] player_bullet_pos_top_i,	//player bullet top position
+	input  [9:0] player_bullet_pos_bot_i,	//player bullet bot position
+	input  [9:0] player_bullet_pos_left_i,	//player bullet left position
+	input  [9:0] player_bullet_pos_right_i,	//player bullet right position
 	output [9:0] left_pos_o,			//ship left position
 	output [9:0] right_pos_o,			//ship right position
 	output [9:0] top_pos_o,				//ship top position
@@ -139,6 +144,12 @@ module enemy
 		end
 	end
 
+	/*----- Logic for bullet FSM -----*/
+	logic [0:0] bullet_move_up, reset_bullet, bullet_active,
+				bullet_next, bullet_pres, bullet_pres_top, bullet_pres_bot,
+				bullet_hit_something, bullet_can_shoot, latch_shoot,
+				bullet_is_flying;
+
 	always_comb begin
 		bounce = 1'b0;
 		moving_right = 1'b0;
@@ -186,7 +197,50 @@ module enemy
 			default:
 				next_l = DEAD;
 		endcase
+
+		/*----- Enemy Bullet FSM -----*/
+		bullet_move_up = 1'b0;
+		bullet_hit_something = 1'b0;
+		reset_bullet = 1'b0;
+		bullet_active = 1'b0;
+		case (bullet_pres)
+			bullet_can_shoot: begin
+				if(latch_shoot) begin
+					bullet_active = 1'b1;
+					bullet_move_up = 1'b1;
+					bullet_next = bullet_is_flying;
+				end else begin
+					reset_bullet = 1'b1;
+					bullet_move_up = 1'b0;
+					bullet_active = 1'b0;
+					bullet_next = bullet_can_shoot;
+				end
+			end
+
+			bullet_is_flying: begin
+				bullet_move_up = 1'b1;
+				reset_bullet = 1'b0;
+				bullet_active = 1'b1;
+				if(bullet_move_up & (~hit_player_i & (bullet_pres_top > 10'd10))) begin
+					bullet_move_up = 1'b1;
+					reset_bullet = 1'b0;
+					bullet_active = 1'b1;
+					bullet_next = bullet_is_flying;
+				end else begin
+					bullet_active = 1'b0;
+					reset_bullet = 1'b1;
+					bullet_move_up = 1'b0;
+					bullet_next = bullet_can_shoot;
+				end
+			end
+
+			default:
+				bullet_next = bullet_pres;
+			
+		endcase
 	end
+
+	
 
 	assign enemy_red_o = color_p[11:8];
 	assign enemy_green_o = color_p[7:4];
@@ -195,7 +249,7 @@ module enemy
 	assign dead_o = dead_l;
 	assign left_pos_o = left_l;
 	assign right_pos_o = right_l;
-	assign top_pos_o = vertical_count;
-	assign bot_pos_o = vertical_count + 10'd40;
+	assign top_pos_o = vertical_count + 10'd10;
+	assign bot_pos_o = vertical_count + 10'd30;
 
 endmodule
