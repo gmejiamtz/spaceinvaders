@@ -10,9 +10,8 @@ void hex_generator (char *filename, int depth_p, int width_p, int fresh) {
         printf("Could not open file %s\n", filename);
         return;
     }
-    srand(time(NULL));
     for (int i = 0; i < depth_p; i++) {
-        for (int j = 0; j < width_p; j++) {
+            for (int j = 0; j < width_p; j++) {
             int num;
             if (fresh) {
                 num = 0;
