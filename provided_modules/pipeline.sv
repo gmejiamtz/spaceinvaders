@@ -32,4 +32,3 @@ module pipeline
 	assign valid_o = valid_l;
     assign ready_o = ~valid_i | ready_i;
 endmodule
-

@@ -74,7 +74,8 @@ module top
     logic [3:0] player_red, player_green, player_blue;
     logic [4:0] player_next, player_pres;
     logic [1:0] bullet_pres_states,bullet_next_states;
-    player #() player_inst 
+    
+    /*player #() player_inst 
         (.clk_i(clk_i) 			        //clock
 	    ,.reset_i(reset_n_async_unsafe_i)	            //reset button
 	    ,.move_left_i(btn_l) 	        //move left - left button
@@ -103,7 +104,7 @@ module top
         ,.bullet_next_o(bullet_next_states)
         ,.bullet_not_border(led_o[1])
         );
-
+    */
     /*----- Enemy -----*/
     // parameters:
     // - color_p = {4'hRed, 4'hGreen, 4'hBlue}
@@ -134,8 +135,8 @@ module top
         ,.enemy_blue_o(enemy_blue));
     
     /*----- Debug Player States -----*/
-    assign led_o[3:2] = bullet_next_states;
-    assign led_o[5:4] = bullet_pres_states;
+    //assign led_o[3:2] = bullet_next_states;
+    //assign led_o[5:4] = bullet_pres_states;
     
     /*----- Draw Player -----*/
     logic [0:0] player_area_1, player_area_2, player_area;
