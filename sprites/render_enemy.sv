@@ -1,11 +1,11 @@
 module render_enemy
     (input [0:0] clk_i
     ,input [0:0] reset_i
-    ,input [0:0] frame_i
-    ,input [9:0] sx_i
-    ,input [9:0] sy_i
-    ,input [9:0] sprx_i
-    ,input [9:0] spry_i
+    ,input [0:0] line_i
+    ,input [9:0] sx
+    ,input [9:0] sy
+    ,input [9:0] sprx
+    ,input [9:0] spry
     ,output [0:0] drawing_o
     ,output [0:0] pix_o);
 
@@ -88,10 +88,10 @@ module render_enemy
     } state;
 
     always_ff @(posedge clk) begin
-        if (line) begin  // prepare for new line
+        if (line_i) begin  // prepare for new line
             state <= REG_POS;
-            pix <= 0;
-            drawing <= 0;
+            pix_o <= 0;
+            drawing_o <= 0;
         end else begin
             case (state)
                 REG_POS: begin
@@ -110,13 +110,13 @@ module render_enemy
                 SPR_LINE: begin
                     if (spr_end || line_end) state <= WAIT_DATA;
                     bmap_x <= bmap_x + 1;
-                    pix <= bmap[bmap_y][bmap_x];
-                    drawing <= 1;
+                    pix_o <= bmap[bmap_y][bmap_x];
+                    drawing_o <= 1;
                 end
                 WAIT_DATA: begin
                     state <= IDLE;  // 1 cycle between address set and data receipt
-                    pix <= 0;  // default colour
-                    drawing <= 0;
+                    pix_o <= 0;  // default colour
+                    drawing_o <= 0;
                 end
                 default: state <= IDLE;
             endcase
@@ -126,8 +126,8 @@ module render_enemy
             state <= IDLE;
             bmap_x <= 0;
             bmap_y <= 0;
-            pix <= 0;
-            drawing <= 0;
+            pix_o <= 0;
+            drawing_o <= 0;
         end
     end
 endmodule
