@@ -50,7 +50,7 @@ module top
     /*----- Instantiate DVI Sync Signals and Coordinates -----*/
     localparam CORDW = 10;
     logic [9:0] x, y;
-    logic [0:0] hsync, vsync, de;
+    logic [0:0] hsync, vsync, de,new_line;
     dvi_controller controller_inst 
         (.clk_pix(clk_i)
         ,.rst_pix(!clk_i_locked)
@@ -64,8 +64,22 @@ module top
     logic [0:0] frame;
     always_comb begin
         frame = (y == 481 && x == 2);
+        new_line = x == 799;
     end
     
+    /*---- Memories ----*/
+    ram_1r1w_sync #(.width_p(21),.depth_p(64),.filename_p("memory_enemy.hex"))
+        enemy_memory_inst (.clk_i(clk_i),.reset_i(1'b0),
+            .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
+            .rd_data_o());
+
+    ram_1r1w_sync #(.width_p(21),.depth_p(64),.filename_p("memory_enemy.hex"))
+        enemy_memory_inst (.clk_i(clk_i),.reset_i(1'b0),
+            .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
+            .rd_data_o());
+
+
+
     /*----- Player -----*/
     // parameter: color_p = {4'hRed, 4'hGreen, 4'hBlue}
     logic [0:0] alive, shot_laser, resume;
@@ -74,7 +88,7 @@ module top
     logic [3:0] player_red, player_green, player_blue;
     logic [4:0] player_next, player_pres;
     logic [1:0] bullet_pres_states,bullet_next_states;
-    
+
     /*player #() player_inst 
         (.clk_i(clk_i) 			        //clock
 	    ,.reset_i(reset_n_async_unsafe_i)	            //reset button
