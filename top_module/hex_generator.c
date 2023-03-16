@@ -35,6 +35,6 @@ void hex_generator (char *filename, int depth_p, int width_p, int fresh) {
 
 int main() {
     hex_generator("memory_enemy.hex", 64, 21, 1);
-    hex_generator("memory_bullets.hex", 2, 20, 1);
+    hex_generator("memory_bullets.hex", 4, 20, 1);
     return 0;
 }
