@@ -27,23 +27,47 @@ module gameSM #()
     ,output [1:0] p_bullet_next_o
     ,output [1:0] p_bullet_pres_o
 
+    ,output [9:0] player_red_o
+    ,output [9:0] player_green_o
+    ,output [9:0] player_blue_o
+
     ,input [0:0] ready_i
     ,output [0:0] valid_o
     );
 
-    typedef enum logic [4:0] {
-        ERROR = 5'b00000,
-        IDLE = 5'b00001,
-        MOVING_LEFT = 5'b00010,
-        MOVING_RIGHT = 5'b00100,
-        SHOOTING = 5'b01000,
-        GAMEOVER = 5'b10000 
-    } player_states;
+    logic [0:0] player_alive, p_bullet_flying;
 
-    typedef enum logic [1:0] {
-        READY = 2'b00,
-        MOVING = 2'b01
-    } bullet_states;
+    player #(.color_p()) player_inst
+        (.clk_i(clk_i)
+        ,.reset_i(reset_i)
+        ,.frame_i(frame_i)
+        ,.move_left_i(btn_left_i)
+        ,.move_right_i(btn_right_i)
+        ,.shoot_i(btn_shoot_i)
+        ,.hit_i(player_was_hit_i)
+        ,.hit_enemy_i(enemy_was_hit_i)
+        ,.add_life_i(1'b0)
+        ,.alive_o(player_alive)
+        ,.pos_left_o(p_left_o)
+        ,.pos_right_o(p_right_o)
+        ,.gun_left_o(p_gun_left_o)
+        ,.gun_right_o(p_gun_right_o)
+        ,.bullet_left_o(p_bullet_left_o)
+        ,.bullet_right_o(p_bullet_right_o)
+        ,.bullet_top_o(p_bullet_top_o)
+        ,.bullet_bot_o(p_bullet_bot_o)
+        /* verilator lint_off PINCONNECTEMPTY */
+        ,.next_states_o()
+        ,.pres_states_o()
+        ,.bullet_pres_o()
+        ,.bullet_next_o()
+        ,.bullet_not_border()
+        /* verilator lint_on PINCONNECTEMPTY */
+        ,.bullet_o(p_bullet_flying)
+        ,.player_red_o(player_red_o)
+        ,.player_green_o(player_green_o)
+        ,.player_blue_o(player_blue_o)
+        ,.);
 endmodule
 
 // each ship ID
