@@ -66,8 +66,7 @@ module gameSM #()
         ,.bullet_o(p_bullet_flying)
         ,.player_red_o(player_red_o)
         ,.player_green_o(player_green_o)
-        ,.player_blue_o(player_blue_o)
-        ,.);
+        ,.player_blue_o(player_blue_o));
 endmodule
 
 // each ship ID
