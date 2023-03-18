@@ -68,15 +68,15 @@ module top
     end
     
     /*---- Memories ----*/
-    ram_1r1w_sync #(.width_p(21),.depth_p(64),.filename_p("memory_enemy.hex"))
-        enemy_memory_inst (.clk_i(clk_i),.reset_i(1'b0),
-            .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
-            .rd_data_o());
+    // ram_1r1w_sync #(.width_p(21),.depth_p(64),.filename_p("memory_enemy.hex"))
+    //     enemy_memory_inst (.clk_i(clk_i),.reset_i(1'b0),
+    //         .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
+    //         .rd_data_o());
 
-    ram_1r1w_sync #(.width_p(21),.depth_p(64),.filename_p("memory_enemy.hex"))
-        enemy_memory_inst (.clk_i(clk_i),.reset_i(1'b0),
-            .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
-            .rd_data_o());
+    // ram_1r1w_sync #(.width_p(21),.depth_p(64),.filename_p("memory_enemy.hex"))
+    //     enemy_memory_inst (.clk_i(clk_i),.reset_i(1'b0),
+    //         .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
+    //         .rd_data_o());
 
 
 
@@ -89,7 +89,7 @@ module top
     logic [4:0] player_next, player_pres;
     logic [1:0] bullet_pres_states,bullet_next_states;
 
-    /*player #() player_inst 
+    player #() player_inst 
         (.clk_i(clk_i) 			        //clock
 	    ,.reset_i(reset_n_async_unsafe_i)	            //reset button
 	    ,.move_left_i(btn_l) 	        //move left - left button
@@ -118,7 +118,6 @@ module top
         ,.bullet_next_o(bullet_next_states)
         ,.bullet_not_border(led_o[1])
         );
-    */
     /*----- Enemy -----*/
     // parameters:
     // - color_p = {4'hRed, 4'hGreen, 4'hBlue}
@@ -129,6 +128,22 @@ module top
     logic [9:0] enemy_left, enemy_right, enemy_top, enemy_bot;
     logic [3:0] enemy_red, enemy_green, enemy_blue;
     logic [9:0] top_ship_pointer, bot_ship_pointer;
+
+    logic [3:0] enemy_r, enemy_g, enemy_b;
+    logic [0:0] landed, dead;
+    enemy #() enemy_inst
+        (.clk_i(clk_i)
+        ,.reset_i(reset_n_async_unsafe_i)
+        ,.frame_i(frame)
+        ,.sx_i(x)
+        ,.sy_i(y)
+        ,.de_i(de)
+        ,.player_top_bullet_pos_i(bullet_top)
+        ,.enemy_r_o(enemy_r)
+        ,.enemy_g_o(enemy_g)
+        ,.enemy_b_o(enemy_b)
+        ,.landed_o(landed)
+        ,.dead_o(dead));
     /*enemy #() enemy_inst_1
         (.clk_i(clk_i)
         ,.reset_i(reset_n_async_unsafe_i)
