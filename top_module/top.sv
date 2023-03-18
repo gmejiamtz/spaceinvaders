@@ -130,7 +130,8 @@ module top
     logic [9:0] top_ship_pointer, bot_ship_pointer;
 
     logic [3:0] enemy_r, enemy_g, enemy_b;
-    logic [0:0] landed, dead;
+    logic [0:0] landed, dead, draw_enemy;
+    logic [0:0] bullet_area;
     enemy #() enemy_inst
         (.clk_i(clk_i)
         ,.reset_i(reset_n_async_unsafe_i)
@@ -138,12 +139,13 @@ module top
         ,.sx_i(x)
         ,.sy_i(y)
         ,.de_i(de)
-        ,.player_top_bullet_pos_i(bullet_top)
+        ,.player_bullet_area_i(bullet_area)
+        ,.draw_enemy(draw_enemy)
         ,.enemy_r_o(enemy_r)
         ,.enemy_g_o(enemy_g)
         ,.enemy_b_o(enemy_b)
         ,.landed_o(landed)
-        ,.dead_o(dead));
+        ,.dead_o(led_o[4]));
     /*enemy #() enemy_inst_1
         (.clk_i(clk_i)
         ,.reset_i(reset_n_async_unsafe_i)
@@ -172,7 +174,7 @@ module top
     logic [0:0] player_x_1, player_x_2, player_y_1, player_y_2;
 
     /*---- Draw Bullet ----*/
-    logic [0:0] bullet_x, bullet_y,bullet_area;
+    logic [0:0] bullet_x, bullet_y;
 
 
     always_comb begin
@@ -199,9 +201,9 @@ module top
     /*----- Color Pixels -----*/
     logic [3:0] paint_r, paint_g, paint_b;
     always_comb begin
-        paint_r = {4{bullet_area}} & player_red | {4{player_area}} & player_red;
-        paint_g = {4{bullet_area}} & player_green | {4{player_area}} & player_green;
-        paint_b = {4{bullet_area}} & player_blue | {4{player_area}} & player_blue;
+        paint_r = {4{draw_enemy}} & enemy_r | {4{bullet_area}} & player_red | {4{player_area}} & player_red;
+        paint_g = {4{draw_enemy}} & enemy_g | {4{bullet_area}} & player_green | {4{player_area}} & player_green;
+        paint_b = {4{draw_enemy}} & enemy_b | {4{bullet_area}} & player_blue | {4{player_area}} & player_blue;
     end
 
     /*----- Display Pixels -----*/
