@@ -1,8 +1,9 @@
 module enemy 
     #(parameter color_p   = {4'hF, 4'hF, 4'hF}
      ,parameter ship_id_p = 10'b00_0000_0001
-     ,parameter qx        = 10'b00_0000_0000
-     ,parameter qy        = 10'b00_0000_0000) 
+    //  ,parameter qx        = 10'b00_0000_0000
+    //  ,parameter qy        = 10'b00_0000_0000
+	) 
     (input [0:0] clk_i
     ,input [0:0] reset_i
     ,input [0:0] frame_i
@@ -29,7 +30,7 @@ module enemy
     end
 
     localparam Q_SIZE = 40; // enemy size in pixels
-    // logic [9:0] qx, qy; // enemy position (origin at top left)
+    logic [9:0] qx, qy; // enemy position (origin at top left)
     // assign qx = top_x_p;
     // assign qy = top_y_p;
 
@@ -38,44 +39,35 @@ module enemy
 
     // update square position once per frame
     always_ff @(posedge clk_i) begin
-        if (frame_i && cnt_frame == 0) begin
-            // horizontal position
-            if (qdx == 0 & ~landed_o) begin  // moving right
-                if (qx + Q_SIZE + qs >= H_RES-1) begin  // hitting right of screen?
-                    qx <= H_RES - Q_SIZE - 1;  // move right as far as we can
-                    qdx <= 1;  // move left next frame
-                    if (!(qy + qs + 80 >= 469)) begin
-                       qy <= qy + qs + 40;
-                    end else begin
-                        landed_o = 1'b1;
-                    end
-                end else qx <= qx + qs;  // continue moving right
-            end else if (~landed_o) begin  // moving left
-                if (qx < qs) begin  // hitting left of screen?
-                    qx <= 0;  // move left as far as we can
-                    qdx <= 0;  // move right next frame
-                    if (!(qy + qs + 80 >= 469)) begin
-                       qy <= qy + qs + 40;
-                    end else begin
-                        landed_o = 1'b1;
-                    end
-                end else qx <= qx - qs;  // continue moving left
-            end
-
-            // vertical position
-            // if (qdy == 0) begin  // moving down
-            //     if (qy + Q_SIZE + qs >= V_RES-1) begin  // hitting bottom of screen?
-            //         qy <= V_RES - Q_SIZE - 1;  // move down as far as we can
-            //         // qdy <= 1;  // move up next frame
-            //     end else qy <= qy + qs;  // continue moving down
-            // end 
-            // else begin  // moving up
-            //     if (qy < qs) begin  // hitting top of screen?
-            //         qy <= 0;  // move up as far as we can
-            //         qdy <= 0;  // move down next frame
-            //     end else qy <= qy - qs;  // continue moving up
-            // end
-        end
+		// if (reset_i) begin
+		// 	qx <= '0;
+		// 	qy <= '0;
+		// end else begin
+			if (frame_i && cnt_frame == 0) begin
+				// horizontal position
+				if (qdx == 0 & ~landed_o) begin  // moving right
+					if (qx + Q_SIZE + qs >= H_RES-1) begin  // hitting right of screen?
+						qx <= H_RES - Q_SIZE - 1;  // move right as far as we can
+						qdx <= 1;  // move left next frame
+						if (!(qy + qs + 80 >= 469)) begin
+						qy <= qy + qs + 40;
+						end else begin
+							landed_o = 1'b1;
+						end
+					end else qx <= qx + qs;  // continue moving right
+				end else if (~landed_o) begin  // moving left
+					if (qx < qs) begin  // hitting left of screen?
+						qx <= 0;  // move left as far as we can
+						qdx <= 0;  // move right next frame
+						if (!(qy + qs + 80 >= 469)) begin
+						qy <= qy + qs + 40;
+						end else begin
+							landed_o = 1'b1;
+						end
+					end else qx <= qx - qs;  // continue moving left
+				end
+			end
+		// end
     end
 
     logic [0:0] enemy;
