@@ -163,9 +163,10 @@ module player
 		.down_i(frame_i & bullet_move_up & (bullet_pres_top > 10'd10)),
 		.load_i(1'b0),.loaded_val_i(10'b0),
 		.counter_o(bullet_pres_top),
+		/* verilator lint_off PINCONNECTEMPTY */
 		.step_o(),
 		.reset_val_o());
-
+		/* verilator lint_on PINCONNECTEMPTY */
 
 
 	//combinational logic for next states
