@@ -11,12 +11,13 @@ module enemy
     ,input [9:0] sy_i
     ,input [0:0] de_i
     ,input [0:0] player_bullet_area_i
+	,input [0:0] player_bullet_flying_i
 	,output [0:0] draw_enemy 
     ,output [3:0] enemy_r_o
     ,output [3:0] enemy_g_o
     ,output [3:0] enemy_b_o
     ,output logic [0:0] landed_o
-    ,output reg [0:0] dead_o);
+    ,output [0:0] dead_o);
     
     localparam H_RES = 640;
     localparam V_RES = 480;
@@ -39,18 +40,20 @@ module enemy
 
     // update square position once per frame
     always_ff @(posedge clk_i) begin
-		// if (reset_i) begin
-		// 	qx <= '0;
-		// 	qy <= '0;
-		// end else begin
-			if (frame_i && cnt_frame == 0) begin
+		if (reset_i) begin
+			qx <= '0;
+			qy <= '0;
+			landed_o <= 1'b0;
+			// dead_o <= 1'b0;
+		end else if (frame_i && cnt_frame == 0) begin
 				// horizontal position
 				if (qdx == 0 & ~landed_o) begin  // moving right
 					if (qx + Q_SIZE + qs >= H_RES-1) begin  // hitting right of screen?
 						qx <= H_RES - Q_SIZE - 1;  // move right as far as we can
 						qdx <= 1;  // move left next frame
 						if (!(qy + qs + 80 >= 469)) begin
-						qy <= qy + qs + 40;
+							qy <= qy + qs + 40;
+							qs <= qs + 2;
 						end else begin
 							landed_o = 1'b1;
 						end
@@ -60,7 +63,8 @@ module enemy
 						qx <= 0;  // move left as far as we can
 						qdx <= 0;  // move right next frame
 						if (!(qy + qs + 80 >= 469)) begin
-						qy <= qy + qs + 40;
+							qy <= qy + qs + 40;
+							qs <= qs + 2;
 						end else begin
 							landed_o = 1'b1;
 						end
@@ -80,17 +84,18 @@ module enemy
         // end
     end
 
+	logic [0:0] dead_l = 1'b0;
 	always_ff @(posedge clk_i) begin
-		if (enemy && player_bullet_area_i) begin
-			dead_o <= 1'b1;
-		end else begin
-			dead_o <= 1'b0;
+		if (enemy && player_bullet_area_i && player_bullet_flying_i) begin
+			dead_l <= 1'b1;
 		end
 	end
+	assign dead_o = dead_l;
     
 	assign draw_enemy = enemy;
-	assign enemy_r_o = color_p[11:8];
-	assign enemy_g_o = color_p[7:4];
-	assign enemy_b_o = color_p[3:0];
+
+	assign enemy_r_o = dead_l ? 4'h0 : color_p[11:8];
+	assign enemy_g_o = dead_l ? 4'h0 : color_p[7:4];
+	assign enemy_b_o = dead_l ? 4'h0 : color_p[3:0];
 
 endmodule

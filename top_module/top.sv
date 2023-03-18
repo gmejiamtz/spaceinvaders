@@ -32,6 +32,25 @@ module top
         ,.reset_o(reset_i)
     );
 
+    wire [0:0] reset_n_sync_r;
+    wire [0:0] reset_sync_r;
+    wire [0:0] reset_r; // Use this as your reset_signal
+    dff #() sync_a
+      (.clk_i(clk_12mhz_i)
+      ,.reset_i(1'b0)
+      ,.d_i(reset_n_async_unsafe_i)
+      ,.q_o(reset_n_sync_r));
+
+    inv #() inv
+      (.a_i(reset_n_sync_r)
+      ,.b_o(reset_sync_r));
+
+    dff #() sync_b
+      (.clk_i(clk_12mhz_i)
+      ,.reset_i(1'b0)
+      ,.d_i(reset_sync_r)
+      ,.q_o(reset_r));
+
     /*----- Synchronize Shooting Button -----*/
     logic [0:0] shoot_btn, btn_l, btn_r;
     synchronizer shoot_button_inst 
@@ -134,18 +153,19 @@ module top
     logic [0:0] bullet_area;
     enemy #() enemy_inst
         (.clk_i(clk_i)
-        ,.reset_i(reset_n_async_unsafe_i)
+        ,.reset_i(~reset_n_async_unsafe_i)
         ,.frame_i(frame)
         ,.sx_i(x)
         ,.sy_i(y)
         ,.de_i(de)
         ,.player_bullet_area_i(bullet_area)
+        ,.player_bullet_flying_i(shot_laser)
         ,.draw_enemy(draw_enemy)
         ,.enemy_r_o(enemy_r)
         ,.enemy_g_o(enemy_g)
         ,.enemy_b_o(enemy_b)
         ,.landed_o(landed)
-        ,.dead_o(led_o[4]));
+        ,.dead_o(led_o[2]));
     /*enemy #() enemy_inst_1
         (.clk_i(clk_i)
         ,.reset_i(reset_n_async_unsafe_i)
