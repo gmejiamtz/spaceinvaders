@@ -12,8 +12,6 @@ module top
     ,output logic [3:0] dvi_b
     );
 
-    logic [0:0] reset_i;
-
     /*----- Generate DVI Pixel Clock -----*/
     // clk_i: pixel clock
     // clk_i_locked: pixel clock locked
@@ -26,30 +24,31 @@ module top
     );
 
     /*----- Syncronize Reset and Change N to P -----*/
-    sync_reset sync_reset_inst (
-        .clk_i(clk_i)
-        ,.reset_n_async_unsafe_i(reset_n_async_unsafe_i)
-        ,.reset_o(reset_i)
-    );
+    // :TODO : safe reset is non-functional with current clock PLL setup.:
+    // sync_reset sync_reset_inst (
+    //     .clk_i(clk_i)
+    //     ,.reset_n_async_unsafe_i(reset_n_async_unsafe_i)
+    //     ,.reset_o(reset_i)
+    // );
 
-    wire [0:0] reset_n_sync_r;
-    wire [0:0] reset_sync_r;
-    wire [0:0] reset_r; // Use this as your reset_signal
-    dff #() sync_a
-      (.clk_i(clk_12mhz_i)
-      ,.reset_i(1'b0)
-      ,.d_i(reset_n_async_unsafe_i)
-      ,.q_o(reset_n_sync_r));
+    // wire [0:0] reset_n_sync_r;
+    // wire [0:0] reset_sync_r;
+    // wire [0:0] reset_r; // Use this as your reset_signal
+    // dff #() sync_a
+    //   (.clk_i(clk_12mhz_i)
+    //   ,.reset_i(1'b0)
+    //   ,.d_i(reset_n_async_unsafe_i)
+    //   ,.q_o(reset_n_sync_r));
 
-    inv #() inv
-      (.a_i(reset_n_sync_r)
-      ,.b_o(reset_sync_r));
+    // inv #() inv
+    //   (.a_i(reset_n_sync_r)
+    //   ,.b_o(reset_sync_r));
 
-    dff #() sync_b
-      (.clk_i(clk_12mhz_i)
-      ,.reset_i(1'b0)
-      ,.d_i(reset_sync_r)
-      ,.q_o(reset_r));
+    // dff #() sync_b
+    //   (.clk_i(clk_12mhz_i)
+    //   ,.reset_i(1'b0)
+    //   ,.d_i(reset_sync_r)
+    //   ,.q_o(reset_r));
 
     /*----- Synchronize Shooting Button -----*/
     logic [0:0] shoot_btn, btn_l, btn_r;
@@ -97,13 +96,11 @@ module top
     //         .wr_valid_i(),.wr_data_i(),.wr_addr_i(),.rd_addr_i(),
     //         .rd_data_o());
 
-
-
     /*----- Player -----*/
     // parameter: color_p = {4'hRed, 4'hGreen, 4'hBlue}
     logic [0:0] alive, shot_laser, resume;
     logic [9:0] pos_left, pos_right, gun_left, gun_right,
-        bullet_left,bullet_right,bullet_top,bullet_bot;
+                bullet_left, bullet_right, bullet_top, bullet_bot;
     logic [3:0] player_red, player_green, player_blue;
     logic [4:0] player_next, player_pres;
     logic [1:0] bullet_pres_states,bullet_next_states;
@@ -118,7 +115,7 @@ module top
 	    ,.hit_i(1'b0) 			        //hit by enemy
 	    ,.hit_enemy_i(1'b0)             //will be wired ground for now
         ,.add_life_i(1'b0)		        //add a life due to beating levels
-	    ,.alive_o(alive)		            //player has more than 0 lives
+	    ,.alive_o(alive)		        //player has more than 0 lives
 	    ,.pos_left_o(pos_left)	        //left most position of player
 	    ,.pos_right_o(pos_right)	    //right most position of player
 	    ,.gun_left_o(gun_left)		    //location of gun, half of the ship size plus 1
@@ -127,7 +124,7 @@ module top
 	    ,.player_green_o(player_green)  //ammount of green the player is for display
 	    ,.player_blue_o(player_blue)	//ammount of blue the player is for display
 	    ,.next_states_o(player_next)	//outputs next states for debugging
-	    ,.pres_states_o(player_pres)  //outputs present states for debugging
+	    ,.pres_states_o(player_pres)    //outputs present states for debugging
         ,.bullet_o(shot_laser)
         ,.bullet_left_o(bullet_left)
         ,.bullet_right_o(bullet_right)
@@ -135,19 +132,14 @@ module top
         ,.bullet_bot_o(bullet_bot)
         ,.bullet_pres_o(bullet_pres_states)
         ,.bullet_next_o(bullet_next_states)
-        ,.bullet_not_border(led_o[1])
-        );
+        ,.bullet_not_border(led_o[1]));
+
     /*----- Enemy -----*/
     // parameters:
     // - color_p = {4'hRed, 4'hGreen, 4'hBlue}
     // - top_start_p = 10'bRow
     // - left_start_p = 10'bColumn
     // - ship_id_p = 10'dShip ID
-    logic [0:0] enemy_hit, enemy_landed, enemy_dead, start;
-    logic [9:0] enemy_left, enemy_right, enemy_top, enemy_bot;
-    logic [3:0] enemy_red, enemy_green, enemy_blue;
-    logic [9:0] top_ship_pointer, bot_ship_pointer;
-
     logic [3:0] enemy_r, enemy_g, enemy_b;
     logic [0:0] landed, dead, draw_enemy;
     logic [0:0] bullet_area;
@@ -165,38 +157,16 @@ module top
         ,.enemy_g_o(enemy_g)
         ,.enemy_b_o(enemy_b)
         ,.landed_o(landed)
-        ,.dead_o(led_o[2]));
-    /*enemy #() enemy_inst_1
-        (.clk_i(clk_i)
-        ,.reset_i(reset_n_async_unsafe_i)
-        ,.hit_i(shot_laser)
-        ,.frame_i(frame)
-        ,.start_i(shoot_btn)
-        ,.pixel_avail_i(10'd600)
-        ,.top_ship_pointer_i(top_ship_pointer)
-        ,.bot_ship_pointer_i(bot_ship_pointer)
-        ,.left_pos_o(enemy_left)
-        ,.right_pos_o(enemy_right)
-        ,.top_pos_o(enemy_top)
-        ,.bot_pos_o(enemy_bot)
-        ,.landed_o(enemy_landed)
-        ,.dead_o(enemy_dead)
-        ,.enemy_red_o(enemy_red)
-        ,.enemy_green_o(enemy_green)
-        ,.enemy_blue_o(enemy_blue));
+        ,.dead_o(dead));
     
     /*----- Debug Player States -----*/
     //assign led_o[3:2] = bullet_next_states;
     //assign led_o[5:4] = bullet_pres_states;
     
-    /*----- Draw Player -----*/
+    /*----- Draw Player & Player Bullet -----*/
     logic [0:0] player_area_1, player_area_2, player_area;
     logic [0:0] player_x_1, player_x_2, player_y_1, player_y_2;
-
-    /*---- Draw Bullet ----*/
     logic [0:0] bullet_x, bullet_y;
-
-
     always_comb begin
         player_x_1 = (x >  pos_left && x < pos_right); //player
         player_x_2 = (x >  gun_left && x < gun_right); //player
@@ -212,18 +182,71 @@ module top
         bullet_area = bullet_x && bullet_y;
     end
 
-    /*----- Draw Enemies -----*/
-    logic [0:0] enemy_area;
+    /*----- Init Game Over Screen -----*/
+    logic [0:19] bmap_lose [15];
+    initial begin
+        bmap_lose[0]  = 20'b0110_0000_0011_0001_0000;
+        bmap_lose[1]  = 20'b0000_0100_0000_0000_0001;
+        bmap_lose[2]  = 20'b0111_1001_0010_0010_1110;
+        bmap_lose[3]  = 20'b0100_0010_1011_0110_1000;
+        bmap_lose[4]  = 20'b0101_1010_1010_1010_1100;
+        bmap_lose[5]  = 20'b0100_1011_1010_0010_1000;
+        bmap_lose[6]  = 20'b0111_1010_1010_0010_1110;
+        bmap_lose[7]  = 20'b0000_0000_0000_0000_0000;
+        bmap_lose[8]  = 20'b0011_0100_1011_1011_1000;
+        bmap_lose[9]  = 20'b0101_0100_1010_0010_1000;
+        bmap_lose[10] = 20'b0101_0010_1011_0011_1000;
+        bmap_lose[11] = 20'b0101_0010_1010_0010_1000;
+        bmap_lose[12] = 20'b0110_0001_0011_1010_1100;
+        bmap_lose[13] = 20'b0000_1100_0000_0000_0000;
+        bmap_lose[14] = 20'b0100_0110_0010_0110_0010;
+    end
+
+    logic [0:19] bmap_win [15];
+    initial begin
+        bmap_win[0]  = 20'b0000_0000_0000_0000_0000;
+        bmap_win[1]  = 20'b0000_0000_0000_0000_0000;
+        bmap_win[2]  = 20'b0000_1010_0110_1001_0000;
+        bmap_win[3]  = 20'b0000_1010_1010_1001_0000;
+        bmap_win[4]  = 20'b0000_0110_1010_1001_0000;
+        bmap_win[5]  = 20'b0000_0010_1010_1001_0000;
+        bmap_win[6]  = 20'b0000_1110_1100_0110_0000;
+        bmap_win[7]  = 20'b0000_0000_0000_0000_0000;
+        bmap_win[8]  = 20'b0000_1000_1010_1001_0000;
+        bmap_win[9]  = 20'b0000_1000_1010_1101_0000;
+        bmap_win[10] = 20'b0000_1000_1010_1011_0000;
+        bmap_win[11] = 20'b0000_1010_1010_1001_0000;
+        bmap_win[12] = 20'b0000_0101_0010_1001_0000;
+        bmap_win[13] = 20'b0000_0000_0000_0000_0000;
+        bmap_win[14] = 20'b0000_0000_0000_0000_0000;
+    end
+
+    logic [0:0] gm_screen_flag, win_screen_flag;
+    logic [4:0] screen_x;
+    logic [3:0] screen_y;
     always_comb begin
-        enemy_area = (x > enemy_left && x < enemy_right && y > enemy_top && y < enemy_bot);
+        screen_x = x[9:5];
+        screen_y = y[8:5];
+        gm_screen_flag = de ? bmap_lose[screen_y][screen_x] : 1'b0;
+        win_screen_flag = de ? bmap_win[screen_y][screen_x] : 1'b0;
     end
 
     /*----- Color Pixels -----*/
     logic [3:0] paint_r, paint_g, paint_b;
     always_comb begin
-        paint_r = {4{draw_enemy}} & enemy_r | {4{bullet_area}} & player_red | {4{player_area}} & player_red;
-        paint_g = {4{draw_enemy}} & enemy_g | {4{bullet_area}} & player_green | {4{player_area}} & player_green;
-        paint_b = {4{draw_enemy}} & enemy_b | {4{bullet_area}} & player_blue | {4{player_area}} & player_blue;
+        if (landed & ~dead) begin
+            paint_r = gm_screen_flag ? 4'hF : 4'h0;
+            paint_g = gm_screen_flag ? 4'h0 : 4'h0;
+            paint_b = gm_screen_flag ? 4'h0 : 4'h0;
+        end else if (dead) begin
+            paint_r = win_screen_flag ? 4'h5 : 4'h0;
+            paint_g = win_screen_flag ? 4'hE : 4'h0;
+            paint_b = win_screen_flag ? 4'h5 : 4'h0;
+        end else begin
+            paint_r = {4{draw_enemy}} & enemy_r | {4{bullet_area}} & player_red | {4{player_area}} & player_red;
+            paint_g = {4{draw_enemy}} & enemy_g | {4{bullet_area}} & player_green | {4{player_area}} & player_green;
+            paint_b = {4{draw_enemy}} & enemy_b | {4{bullet_area}} & player_blue | {4{player_area}} & player_blue;
+        end
     end
 
     /*----- Display Pixels -----*/
