@@ -83,8 +83,8 @@ $ make prog
 This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file.
 
 
-Made with :heart: by <a href="https://github.com/colbarron" target="_blank">Gary Mejia</a>
-and <a href="https://github.com/colbarron" target="_blank">Edwin Rojas</a>
+Made by <a href="https://github.com/colbarron" target="_blank">Gary Mejia</a>
+and <a href="https://github.com/edro360" target="_blank">Edwin Rojas</a>
 
 &#xa0;
 
