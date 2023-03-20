@@ -80,7 +80,7 @@ $ make prog
 
 ## :memo: License ##
 
-This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file.
+This project is under license from MIT. For more details, see the [LICENSE](LICENSE) file.
 
 
 Made by <a href="https://github.com/colbarron" target="_blank">Gary Mejia</a>
