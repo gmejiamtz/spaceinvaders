@@ -6,7 +6,7 @@
   <!-- <a href="https://spaceinvaders.netlify.app">Demo</a> -->
 </div>
 
-<h1 align="center">Spaceinvaders</h1>
+<h1 align="center">FPGA Space Invaders</h1>
 
 <p align="center">
   <img alt="Github top language" src="https://img.shields.io/github/languages/top/colbarron/spaceinvaders?color=56BEB8">
@@ -33,9 +33,8 @@
 <hr> -->
 
 <p align="center">
-  <a href="#dart-about">About</a> &#xa0; | &#xa0; 
-  <a href="#sparkles-features">Features</a> &#xa0; | &#xa0;
-  <a href="#rocket-technologies">Technologies</a> &#xa0; | &#xa0;
+  <a href="#dart-about">About</a> &#xa0; | &#xa0;
+  <a href="#rocket-technologies">Tools</a> &#xa0; | &#xa0;
   <a href="#white_check_mark-requirements">Requirements</a> &#xa0; | &#xa0;
   <a href="#checkered_flag-starting">Starting</a> &#xa0; | &#xa0;
   <a href="#memo-license">License</a> &#xa0; | &#xa0;
@@ -44,46 +43,39 @@
 
 <br>
 
-## :dart: About ##
+## About ##
 
-Describe your project
+In this project, we aim to make use of the iCEbreaker FPGA and open    \
+source tools to implement the classic Space Invaders game.
 
-## :sparkles: Features ##
-
-:heavy_check_mark: Feature 1;\
-:heavy_check_mark: Feature 2;\
-:heavy_check_mark: Feature 3;
-
-## :rocket: Technologies ##
+## Tools ##
 
 The following tools were used in this project:
 
-- [Expo](https://expo.io/)
-- [Node.js](https://nodejs.org/en/)
-- [React](https://pt-br.reactjs.org/)
-- [React Native](https://reactnative.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
+- [Yosys Open SYnthesis Suite](https://yosyshq.net/yosys/)
+- [icestorm-40](https://clifford.at/icestorm)
+- [Verilator](https://www.veripool.org/verilator/)
 
 ## :white_check_mark: Requirements ##
 
-Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) and [Node](https://nodejs.org/en/) installed.
+Before starting :checkered_flag:, you need to have [iCEbreaker FPGA or Lattice-based FPGA](https://1bitsquared.com/products/icebreaker) and tools mentioned in the Tools section.
 
 ## :checkered_flag: Starting ##
 
 ```bash
+# If said tools are installed then continue below:
+
 # Clone this project
 $ git clone https://github.com/colbarron/spaceinvaders
 
 # Access
-$ cd spaceinvaders
+$ cd spaceinvaders/top_module
 
-# Install dependencies
-$ yarn
+# Make the 
+$ make prog
 
-# Run the project
-$ yarn start
-
-# The server will initialize in the <http://localhost:3000>
+# Make sure the FPGA is connected and has the DVI Pmod attached.
+# At this point the FPGA should be programmed and you can start playing the game.
 ```
 
 ## :memo: License ##
@@ -92,6 +84,7 @@ This project is under license from MIT. For more details, see the [LICENSE](LICE
 
 
 Made with :heart: by <a href="https://github.com/colbarron" target="_blank">Gary Mejia</a>
+and <a href="https://github.com/colbarron" target="_blank">Edwin Rojas</a>
 
 &#xa0;
 
