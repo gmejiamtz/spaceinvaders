@@ -47,7 +47,7 @@
 In this project, we aim to make use of the iCEbreaker FPGA and open    \
 source tools to implement the classic Space Invaders game.
 
-## Tools ##
+## :hammer: Tools ##
 
 The following tools were used in this project:
 
@@ -76,6 +76,71 @@ $ make prog
 # Make sure the FPGA is connected and has the DVI Pmod attached.
 # At this point the FPGA should be programmed and you can start playing the game.
 ```
+
+## v1.0 File Tree ##
+<pre>
+Root
+|
++-- dvi_test
+|  |
+|  +-- Makefile
+|  +-- top_square.sv
+|
++-- enemy
+|  |
+|  +-- enemy.sv
+|  +--Invoice.pdf
+|
++-- gameSM
+|  |
+|  +-- gameSM.sv
+|
++-- player
+|  |
+|  +-- player.sv
+|  +-- testbench.sv
+|  +-- Makefile
+|
++-- provided_modules
+|  |
+|  +-- and2.sv
+|  +-- counter.sv
+|  +-- dff.sv
+|  +-- inv.sv
+|  +-- memory_init_file.hex
+|  +-- or2.sv
+|  +-- pipeline.sv
+|  +-- ram_1r1w_sync.sv
+|  +-- sync_reset.sv
+|  +-- synchronizer.sv
+|
++-- sprites
+|  |
+|  +-- render_enemy.sv
+|
++-- top_module
+|  |
+|  +-- generate (a.out)
+|  +-- hex_generator.c
+|  +-- Makefile
+|  +-- mem_init.cpp
+|  +-- memory_bullets.hex
+|  +-- memory_enemy.hex
+|  +-- top.sv
+|
++-- utils
+|  |
+|  +-- clock_gen_25MHz.sv
+|  +-- dvi_controller.sv
+|  +-- icebreaker.pcf
+|  +-- nonsynth_clock_gen.sv
+|  +-- nonsynth_reset_gen.sv
+|
++-- fpga.mk
++-- LICENSE
++-- README.md
++-- simulation.mk
+</pre>
 
 ## :memo: License ##
 
